@@ -1,7 +1,7 @@
 local Players = game:GetService("Players")
 
 local HttpService = game:GetService("HttpService")
-local ENGAGE_URL = "http://127.0.0.1:5002/gameplay/"
+local ENGAGE_URL = "http://127.0.0.1:5002/"
 
 local function request(url, bodyDict)
 	local response = HttpService:RequestAsync(
@@ -15,23 +15,62 @@ local function request(url, bodyDict)
 		}
 	)
 	
-	return {response.Body, response.Body}
+	return {response.StatusCode, response.Body}
 end
 
 Players.PlayerAdded:Connect(function(player)
 	
-	local playerId = player.UserId
-	local gameId = game.GameId
-	local joinURL = ENGAGE_URL .. "join/" .. gameId .. "/" .. playerId
+	local url = ENGAGE_URL .. "join/" .. game.GameId
+	
+	local bodyDict = {
+		["player_id"] = player.UserId,
+		["player_name"] = player.Name
+	}
+	
+	local resp
 	
 	local function playerAdd()
-		request(joinURL, {})
+		resp = request(url, bodyDict)
 	end
 	
 	
 	local success, message = pcall(playerAdd)
-	print(success)
-	print(message)
 	
+	if success then
+		local status = resp[1]
+		local msg = resp[2]
+		print(status)
+		print(msg)
+	end
+	
+	
+	return true
+end)
+
+Players.PlayerRemoving:Connect(function(player)
+
+	local url = ENGAGE_URL .. "leave/" .. game.GameId
+
+	local bodyDict = {
+		["player_id"] = player.UserId
+	}
+
+	local resp
+
+	local function playerAdd()
+		resp = request(url, bodyDict)
+	end
+
+
+	local success, message = pcall(playerAdd)
+
+	if success then
+		local status = resp[1]
+		local msg = resp[2]
+		print(status)
+		print(msg)
+	end
+
+
 	return true
 end)
