@@ -1,7 +1,7 @@
 local Players = game:GetService("Players")
 
 local HttpService = game:GetService("HttpService")
-local ENGAGE_URL = "http://127.0.0.1:5002/"
+local ENGAGE_URL = "http://127.0.0.1:5001/gameplay/"
 
 local function request(url, bodyDict)
 	local response = HttpService:RequestAsync(
