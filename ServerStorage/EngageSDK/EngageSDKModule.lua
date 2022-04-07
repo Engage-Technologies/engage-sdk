@@ -3,7 +3,7 @@ local module = {}
 local HttpService = game:GetService("HttpService")
 local ENGAGE_URL = "http://127.0.0.1:5001/gameplay/"
 
-function module.getRequest(uri_extension)
+local function getRequest(uri_extension)
 	local response = HttpService:RequestAsync(
 		{
 			Url = ENGAGE_URL .. uri_extension,
@@ -14,7 +14,7 @@ function module.getRequest(uri_extension)
 	return {response.StatusCode, response.Body}
 end
 
-function module.postRequest(uri_extension, bodyDict)
+local function postRequest(uri_extension, bodyDict)
 	local response = HttpService:RequestAsync(
 		{
 			Url = ENGAGE_URL .. uri_extension,
@@ -29,6 +29,59 @@ function module.postRequest(uri_extension, bodyDict)
 	return {response.StatusCode, response.Body}
 end
 
+function module.addPlayer(player)
+
+	local url = "join/" .. game.GameId
+
+	local bodyDict = {
+		["player_id"] = player.UserId,
+		["player_name"] = player.Name
+	}
+
+	local resp
+
+	local function postRequestWrapper()
+		resp = postRequest(url, bodyDict)
+	end
+
+	local success, message = pcall(postRequestWrapper)
+
+	if success then
+		local status = resp[1]
+		if status == 204 then
+			return true
+		end
+	end
+
+	return nil
+end
+
+function module.removePlayer(player)
+
+	local url = "leave/" .. game.GameId
+
+	local bodyDict = {
+		["player_id"] = player.UserId
+	}
+
+	local resp
+
+	local function postRequestWrapper()
+		resp = postRequest(url, bodyDict)
+	end
+
+	local success, message = pcall(postRequestWrapper)
+
+	if success then
+		local status = resp[1]
+		if status == 204 then
+			return true
+		end
+	end
+
+	return nil
+end
+
 function module.getQuestion(player_id)
 	
 	local url = "questions/" .. game.GameId .. "/" .. player_id
@@ -36,7 +89,7 @@ function module.getQuestion(player_id)
 	local resp
 
 	local function getRequestWrapper()
-		resp = module.getRequest(url)
+		resp = getRequest(url)
 	end
 
 	local success, message = pcall(getRequestWrapper)
@@ -51,6 +104,38 @@ function module.getQuestion(player_id)
 	
 	return nil
 	
+end
+
+function module.postResponse(player_id, instace_id, response, correct, started_at, answered_at)
+
+	local url = "responses/" .. game.GameId .. "/" .. player_id
+
+	local bodyDict = {
+		["player_id"] = player_id,
+		["question_instance_id"] = instace_id,
+		["response"] = response,
+		["correct"] = correct,
+		["started_at"] = started_at,
+		["answered_at"] = answered_at
+	}
+
+	local resp
+
+	local function postRequestWrapper()
+		resp = module.postRequest(url, bodyDict)
+	end
+
+	local success, message = pcall(postRequestWrapper)
+
+	if success then
+		local status = resp[1]
+		if status == 204 then
+			return true
+		end
+	end
+
+	return nil
+
 end
 
 return module
