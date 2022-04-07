@@ -1,26 +1,11 @@
+local ServerStorage = game:GetService("ServerStorage")
+local engageSDK = require(ServerStorage.EngageSDK.EngageSDKModule)
+
 local Players = game:GetService("Players")
-
-local HttpService = game:GetService("HttpService")
-local ENGAGE_URL = "http://127.0.0.1:5001/gameplay/"
-
-local function request(url, bodyDict)
-	local response = HttpService:RequestAsync(
-		{
-			Url = url,  -- This website helps debug HTTP requests
-			Method = "POST",
-			Headers = {
-				["Content-Type"] = "application/json"  -- When sending JSON, set this!
-			},
-			Body = HttpService:JSONEncode(bodyDict)
-		}
-	)
-	
-	return {response.StatusCode, response.Body}
-end
 
 Players.PlayerAdded:Connect(function(player)
 	
-	local url = ENGAGE_URL .. "join/" .. game.GameId
+	local url = "join/" .. game.GameId
 	
 	local bodyDict = {
 		["player_id"] = player.UserId,
@@ -30,7 +15,7 @@ Players.PlayerAdded:Connect(function(player)
 	local resp
 	
 	local function playerAdd()
-		resp = request(url, bodyDict)
+		resp = engageSDK.postRequest(url, bodyDict)
 	end
 	
 	
@@ -49,7 +34,7 @@ end)
 
 Players.PlayerRemoving:Connect(function(player)
 
-	local url = ENGAGE_URL .. "leave/" .. game.GameId
+	local url = "leave/" .. game.GameId
 
 	local bodyDict = {
 		["player_id"] = player.UserId
@@ -58,7 +43,7 @@ Players.PlayerRemoving:Connect(function(player)
 	local resp
 
 	local function playerAdd()
-		resp = request(url, bodyDict)
+		resp = engageSDK.postRequest(url, bodyDict)
 	end
 
 

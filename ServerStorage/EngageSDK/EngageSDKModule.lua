@@ -3,10 +3,10 @@ local module = {}
 local HttpService = game:GetService("HttpService")
 local ENGAGE_URL = "http://127.0.0.1:5001/gameplay/"
 
-local function getRequest(url)
+function module.getRequest(uri_extension)
 	local response = HttpService:RequestAsync(
 		{
-			Url = url,
+			Url = ENGAGE_URL .. uri_extension,
 			Method = "GET"
 		}
 	)
@@ -14,10 +14,10 @@ local function getRequest(url)
 	return {response.StatusCode, response.Body}
 end
 
-local function postRequest(url, bodyDict)
+function module.postRequest(uri_extension, bodyDict)
 	local response = HttpService:RequestAsync(
 		{
-			Url = url,  -- This website helps debug HTTP requests
+			Url = ENGAGE_URL .. uri_extension,
 			Method = "POST",
 			Headers = {
 				["Content-Type"] = "application/json"  -- When sending JSON, set this!
@@ -31,12 +31,12 @@ end
 
 function module.getQuestion(player_id)
 	
-	local url = ENGAGE_URL .. "questions/" .. game.GameId .. "/" .. player_id
+	local url = "questions/" .. game.GameId .. "/" .. player_id
 
 	local resp
 
 	local function getRequestWrapper()
-		resp = getRequest(url)
+		resp = module.getRequest(url)
 	end
 
 	local success, message = pcall(getRequestWrapper)
