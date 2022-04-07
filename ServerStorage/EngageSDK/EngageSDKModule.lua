@@ -51,6 +51,8 @@ function module.addPlayer(player)
 		if status == 204 then
 			return true
 		end
+	else
+		print(message)
 	end
 
 	return nil
@@ -77,6 +79,8 @@ function module.removePlayer(player)
 		if status == 204 then
 			return true
 		end
+	else
+		print(message)
 	end
 
 	return nil
@@ -100,13 +104,15 @@ function module.getQuestion(player_id)
 		if status == 200 then
 			return msg
 		end
+	else
+		print(message)
 	end
 	
 	return nil
 	
 end
 
-function module.postResponse(player_id, instace_id, response, correct, started_at, answered_at)
+function module.leaveResponse(player_id, instace_id, response, correct, started_at, answered_at)
 
 	local url = "responses/" .. game.GameId .. "/" .. player_id
 
@@ -114,15 +120,19 @@ function module.postResponse(player_id, instace_id, response, correct, started_a
 		["player_id"] = player_id,
 		["question_instance_id"] = instace_id,
 		["response"] = response,
-		["correct"] = correct,
-		["started_at"] = started_at,
-		["answered_at"] = answered_at
+		["correct"] = correct
 	}
+	if started_at then
+		bodyDict["started_at"] = started_at
+	end
+	if answered_at then
+		bodyDict["answered_at"] = answered_at
+	end
 
 	local resp
 
 	local function postRequestWrapper()
-		resp = module.postRequest(url, bodyDict)
+		resp = postRequest(url, bodyDict)
 	end
 
 	local success, message = pcall(postRequestWrapper)
@@ -132,6 +142,8 @@ function module.postResponse(player_id, instace_id, response, correct, started_a
 		if status == 204 then
 			return true
 		end
+	else
+		print(message)
 	end
 
 	return nil
