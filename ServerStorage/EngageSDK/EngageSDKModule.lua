@@ -3,6 +3,13 @@ local module = {}
 local HttpService = game:GetService("HttpService")
 local ENGAGE_URL = "http://127.0.0.1:5001/gameplay/"
 
+local function parseBody(httpBody)
+	if httpBody ~= "" then
+		return HttpService:JSONDecode(httpBody) 
+	end
+	return nil
+end
+
 local function getRequest(uri_extension)
 	local response = HttpService:RequestAsync(
 		{
@@ -10,8 +17,7 @@ local function getRequest(uri_extension)
 			Method = "GET"
 		}
 	)
-
-	return {response.StatusCode, response.Body}
+	return {response.StatusCode, parseBody(response.Body)}
 end
 
 local function postRequest(uri_extension, bodyDict)
@@ -25,8 +31,7 @@ local function postRequest(uri_extension, bodyDict)
 			Body = HttpService:JSONEncode(bodyDict)
 		}
 	)
-
-	return {response.StatusCode, response.Body}
+	return {response.StatusCode, parseBody(response.Body)}
 end
 
 function module.addPlayer(player)
