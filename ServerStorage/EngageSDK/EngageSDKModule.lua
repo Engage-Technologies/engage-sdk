@@ -155,4 +155,13 @@ function module.leaveResponse(player_id, instace_id, response, correct, started_
 
 end
 
+function module.extractQuestionInfo(_type, option_num, message)
+	local relevantTable
+	if _type == "option" then
+		return message["options"][option_num]
+	end
+	return message[_type]
+	
+end
+
 return module

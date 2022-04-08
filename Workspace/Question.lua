@@ -1,7 +1,10 @@
 -- Load the event this script listens for
 local ServerStorage = game:GetService("ServerStorage")
-local EngageEvents = ServerStorage.EngageSDK.Events
+local EngageSDK = ServerStorage.EngageSDK
+local EngageEvents = EngageSDK.Events
+local engageModule = require(EngageSDK.EngageSDKModule)
 local question_type = script:GetAttribute("type")
+local option_num = script:GetAttribute("option_num")
 local zone = script:GetAttribute("zone")
 local myEventName = "EngageEventZone_" .. zone
 local myEvent = EngageEvents:FindFirstChild(myEventName)
@@ -26,16 +29,8 @@ toggleDispaly(true)
 -- Load as much of it as possible in a module script
 
 myEvent.Event:Connect(function(message)
-	--print(myEventName .. " Received!")
-	--print(message)
-	
-	local relevantTable
-	if question_type == "option" then
-		local option_num = script:GetAttribute("option_num")
-		relevantTable = message["options"][option_num]
-	else
-		relevantTable = message[question_type]
-	end
+
+	local relevantTable = engageModule.extractQuestionInfo(question_type, option_num, message)
 	
 	if relevantTable["text"] then
 		textLabel.Text = relevantTable["text"]
