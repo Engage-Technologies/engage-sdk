@@ -12,11 +12,11 @@ local imageLabel = frame.ImageLabel
 
 local function toggleDispaly(showText)
 	if showText then
-		textLabel.Active = true
-		imageLabel.Active = false
+		textLabel.Visible = true
+		imageLabel.Visible = false
 	else
-		textLabel.Active = false
-		imageLabel.Active = true
+		textLabel.Visible = false
+		imageLabel.Visible = true
 	end
 end
 
@@ -26,8 +26,8 @@ toggleDispaly(true)
 -- Load as much of it as possible in a module script
 
 myEvent.Event:Connect(function(message)
-	print(myEventName .. " Received!")
-	print(message)
+	--print(myEventName .. " Received!")
+	--print(message)
 	
 	local relevantTable
 	if question_type == "option" then
