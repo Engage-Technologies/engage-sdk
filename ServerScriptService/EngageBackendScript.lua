@@ -67,7 +67,8 @@ for zoneNum = 1, numTags do
 		
 		local db = true -- does this variable get replicated OR need to be a global table?
 		
-		local option = responseObj:GetAttribute("EngageType")
+		local response = responseObj:GetAttribute("EngageType")
+		local option = "option"..tostring( response:sub(-1, -1) )
 		
 		local function touched(touchedPart)
 			local partParent = touchedPart.Parent
@@ -75,21 +76,19 @@ for zoneNum = 1, numTags do
 			local humanoid = partParent:FindFirstChildWhichIsA("Humanoid")
 			if humanoid and db then
 				db = false
-				print("You selected " .. option)
 				
-				-- Check if correct
-				--if questionZoneInfo[tagName][option]["isAnswer"] then
-				--	print("You chose correctly!")
-				--else
-				--	print("Wrong answer!")
-				--end
+				print("Zone " .. zoneNum .. ". You selected: " .. option)
 				
-				-- 
+				local response = questionZoneInfo[zoneNum][option]
+				
+				if response["isAnswer"] then
+					print("You chose correctly!")
+				else
+					print("Wrong!")
+				end				
 				
 				-- we could send the http request from here! That would be simpler...
-				--module.leaveResponse(player_id, instace_id, response, correct, started_at, answered_at)
-				
-				
+				--module.leaveResponse(player_id, instace_id, response, correct, started_at, answered_at)				
 				
 				wait(3)
 				db = true
@@ -104,17 +103,15 @@ end
 local function updateQuestionZone(zoneNum, playerId)
 	-- Update question Zone
 	
-	local tagName = "QuestionInstance" .. zoneNum
-	
 	-- Pull the new question
-	questionZoneInfo[tagName] = engageSDK.getQuestion(playerId)
+	questionZoneInfo[zoneNum] = engageSDK.getQuestion(playerId)
 	
 	-- Find the question and option zone components
 	local zoneComponents = findZoneComponents(zoneNum, {"question", "option"})
 	
 	-- Update the surfaces	
 	for key, value in pairs(zoneComponents) do
-		engageSurfaceUpdater.updateSurface(value, questionZoneInfo[tagName][key])
+		engageSurfaceUpdater.updateSurface(value, questionZoneInfo[zoneNum][key])
 	end
 	
 end
