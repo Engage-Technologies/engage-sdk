@@ -1,5 +1,6 @@
 local ServerStorage = game:GetService("ServerStorage")
 local engageSDK = require(ServerStorage.EngageSDK.EngageSDKModule)
+local engageSurfaceUpdater = require(ServerStorage.EngageSDK.SurfaceModule)
 local CollectionService = game:GetService("CollectionService")
 
 -- Zone Information
@@ -25,48 +26,44 @@ local function findQuestionComponents(obj)
 	return components
 end
 
--- Add Responses
-local numTags = script:GetAttribute("EngageNumTags")
-for i = 1, numTags do
-	-- Loop through all tags
-	local tagName = "QuestionZone" .. i
+local function findZoneComponents(zoneNum, matchingAttributes)
+	-- matchingAttribute - array of substrings to match in "EngageType" attribute
 	
+	-- Loop through all tags
+	local tagName = "QuestionZone" .. zoneNum
+
 	local zoneObjects = CollectionService:GetTagged(tagName)
 	
-	local foundObjects = {
-		["response1"] = false,
-		["response2"] = false,
-		["response3"] = false
-	}
-	
+	local foundObjects = {}
+
 	for _, zoneObj in ipairs(zoneObjects) do
 		local components = findQuestionComponents(zoneObj)
-		
+
 		for _, component in ipairs(components) do
 			local engageType = component:GetAttribute("EngageType")
-			if engageType:match("response") then
-				foundObjects[engageType] = component
+			
+			if engageType then
+				for _, attribute in ipairs(matchingAttributes) do
+					if engageType:match(attribute) then
+						foundObjects[engageType] = component
+					end
+				end
 			end
 		end
 	end
 	
-	for key, value in pairs(foundObjects) do
-		print(key .. " : " .. value.Name)
-	end
+	return foundObjects
 	
-	-- Error check, make sure we have everything...
+end
+
+-- Add Responses
+local numTags = script:GetAttribute("EngageNumTags")
+for zoneNum = 1, numTags do
 	
-	-- Handle Question Zone
-	questionZoneInfo[tagName] = {
-		["question_instance_id"] = 1,
-		["response_type"] = "", -- assume we'll support more than multiple choice but plan for it initially
-		["option1"] = {}, -- mark one of these as the answer
-		["option2"] = {},
-		["option3"] = {}
-	}
+	local zoneObjects = findZoneComponents(zoneNum, {"response"})
 	
 	-- Handle responses
-	for key, responseObj in pairs(foundObjects) do
+	for key, responseObj in pairs(zoneObjects) do
 		
 		local db = true -- does this variable get replicated OR need to be a global table?
 		
@@ -112,18 +109,14 @@ local function updateQuestionZone(zoneNum, playerId)
 	-- Pull the new question
 	questionZoneInfo[tagName] = engageSDK.getQuestion(playerId)
 	
-	--questionZoneInfo[tagName] = {
-	--	["instance_id"] = 1,
-	--	["response_type"] = "", -- assume we'll support more than multiple choice but plan for it initially
-	--	["option1"] = {}, -- mark one of these as the answer
-	--	["option2"] = {},
-	--	["option3"] = {}
-	--}
-	for key, value in pairs(questionZoneInfo[tagName]) do
-		print(key .. " : " .. tostring(value))
+	-- Find the question and option zone components
+	local zoneComponents = findZoneComponents(zoneNum, {"question", "option"})
+	
+	-- Update the surfaces	
+	for key, value in pairs(zoneComponents) do
+		engageSurfaceUpdater.updateSurface(value, questionZoneInfo[tagName][key])
 	end
 	
-	-- Loop through & update objects
 end
 
 updateQuestionZone(1, 3235295467)
