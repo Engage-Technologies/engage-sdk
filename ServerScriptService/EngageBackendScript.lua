@@ -81,14 +81,20 @@ for zoneNum = 1, numTags do
 				
 				local response = questionZoneInfo[zoneNum][option]
 				
+				local correct
 				if response["isAnswer"] then
-					print("You chose correctly!")
+					correct = true
 				else
-					print("Wrong!")
-				end				
+					correct = false
+					humanoid.Health = 0
+				end
 				
-				-- we could send the http request from here! That would be simpler...
-				--module.leaveResponse(player_id, instace_id, response, correct, started_at, answered_at)				
+				local player = Players:GetPlayerFromCharacter(humanoid.Parent)
+				local instanceId = questionZoneInfo[zoneNum]["question_instance_id"]
+				
+				engageSDK.leaveResponse(player.UserId, instanceId, response, correct, nil, nil)
+				
+				-- update the next question
 				
 				wait(3)
 				db = true
