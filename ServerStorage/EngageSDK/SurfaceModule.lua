@@ -24,7 +24,6 @@ function module.updateSurface(surfacePart, questionInfo)
 		print("There's audio")
 	end
 	if questionInfo["image"] then
-		print("There's an image")
 		imageLabel.Image = "rbxassetid://" .. tostring(questionInfo["image"])
 		imageLabel.SizeConstraint = Enum.SizeConstraint.RelativeYY
 		toggleDispaly(false)

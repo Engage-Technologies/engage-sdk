@@ -2,6 +2,7 @@ local ServerStorage = game:GetService("ServerStorage")
 local engageSDK = require(ServerStorage.EngageSDK.EngageSDKModule)
 local engageSurfaceUpdater = require(ServerStorage.EngageSDK.SurfaceModule)
 local CollectionService = game:GetService("CollectionService")
+local numQuestionZones = script:GetAttribute("EngageNumZones")
 
 -- Zone Information
 local questionZoneInfo = {}
@@ -56,9 +57,29 @@ local function findZoneComponents(zoneNum, matchingAttributes)
 	
 end
 
+local function updateQuestionZone(zoneNum, playerId)
+	-- Update question Zone
+	
+	if zoneNum > numQuestionZones then
+		print("Cannot update zone: " .. tostring(zoneNum))
+		return
+	end
+
+	-- Pull the new question
+	questionZoneInfo[zoneNum] = engageSDK.getQuestion(playerId)
+
+	-- Find the question and option zone components
+	local zoneComponents = findZoneComponents(zoneNum, {"question", "option"})
+
+	-- Update the surfaces	
+	for key, value in pairs(zoneComponents) do
+		engageSurfaceUpdater.updateSurface(value, questionZoneInfo[zoneNum][key])
+	end
+
+end
+
 -- Add Responses
-local numTags = script:GetAttribute("EngageNumTags")
-for zoneNum = 1, numTags do
+for zoneNum = 1, numQuestionZones do
 	
 	local zoneObjects = findZoneComponents(zoneNum, {"response"})
 	
@@ -95,6 +116,9 @@ for zoneNum = 1, numTags do
 				engageSDK.leaveResponse(player.UserId, instanceId, response, correct, nil, nil)
 				
 				-- update the next question
+				if correct then
+					updateQuestionZone(zoneNum + 1, player.UserId)
+				end
 				
 				wait(3)
 				db = true
@@ -104,22 +128,6 @@ for zoneNum = 1, numTags do
 		
 		responseObj.Touched:Connect(touched)
 	end
-end
-
-local function updateQuestionZone(zoneNum, playerId)
-	-- Update question Zone
-	
-	-- Pull the new question
-	questionZoneInfo[zoneNum] = engageSDK.getQuestion(playerId)
-	
-	-- Find the question and option zone components
-	local zoneComponents = findZoneComponents(zoneNum, {"question", "option"})
-	
-	-- Update the surfaces	
-	for key, value in pairs(zoneComponents) do
-		engageSurfaceUpdater.updateSurface(value, questionZoneInfo[zoneNum][key])
-	end
-	
 end
 
 updateQuestionZone(1, 3235295467)
