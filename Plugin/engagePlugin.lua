@@ -94,5 +94,28 @@ local function buildQuestionFrame()
 	
 end
 
+local function syncGuiColors(objects)
+	print(objects)
+	local function setColors()
+		for _, guiObject in pairs(objects) do
+			print(guiObject.Name)
+			
+			-- Sync background color
+			guiObject.BackgroundColor3 = settings().Studio.Theme:GetColor(Enum.StudioStyleGuideColor.MainBackground)
+			
+			if not guiObject:isA("Frame") then
+				-- Sync text color
+				guiObject.TextColor3 = settings().Studio.Theme:GetColor(Enum.StudioStyleGuideColor.MainText)
+				guiObject.BorderColor3 = settings().Studio.Theme:GetColor(Enum.StudioStyleGuideColor.MainText)
+			end
+		end
+	end
+	-- Run 'setColors()' function to initially sync colors
+	setColors()
+	-- Connect 'ThemeChanged' event to the 'setColors()' function
+	settings().Studio.ThemeChanged:Connect(setColors)
+end
+
 buildApiKeyFrame()
 buildQuestionFrame()
+syncGuiColors(learnWidget:GetDescendants())
