@@ -54,7 +54,7 @@ function module.addPlayer(player)
 end
 
 function module.removePlayer(player)
-	engageAPIWrapper.addPlayer(player)
+	engageAPIWrapper.removePlayer(player)
 end
 
 function module.getQuestion(playerId)
