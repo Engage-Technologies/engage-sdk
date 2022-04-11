@@ -61,9 +61,18 @@ function module.getQuestion(playerId)
 
 	-- Acquire new question information
 	local questionInfo = engageAPIWrapper.getQuestion(playerId)
-	-- Shuffle options
-	local newQuestionInfo = shuffleOptions(questionInfo)
-	return newQuestionInfo
+	if questionInfo then
+		
+		-- Shuffle options
+		local newQuestionInfo = shuffleOptions(questionInfo)
+		return newQuestionInfo
+		
+	end
+	
+end
+
+function module.leaveResponse(playerId, instanceId, response, correct, startedAt, answeredAt)
+	engageAPIWrapper.leaveResponse(playerId, instanceId, response, correct, startedAt, answeredAt)
 end
 
 return module

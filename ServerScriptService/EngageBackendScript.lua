@@ -67,6 +67,11 @@ local function updateQuestionZone(zoneNum, playerId)
 
 	-- Pull the new question
 	questionZoneInfo[zoneNum] = engageSDK.getQuestion(playerId)
+	
+	-- Check for success in new question info
+	if not questionZoneInfo[zoneNum] then
+		return
+	end
 
 	-- Find the question and option zone components
 	local zoneComponents = findZoneComponents(zoneNum, {"question", "option"})
@@ -100,6 +105,10 @@ for zoneNum = 1, numQuestionZones do
 				
 				print("Zone " .. zoneNum .. ". You selected: " .. option)
 				
+				if not questionZoneInfo[zoneNum] then
+					print("Question " .. tostring(zoneNum) .. " was never updated")
+					return
+				end
 				local response = questionZoneInfo[zoneNum][option]
 				
 				local correct

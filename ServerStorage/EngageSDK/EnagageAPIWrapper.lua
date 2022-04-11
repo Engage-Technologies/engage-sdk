@@ -57,7 +57,7 @@ function module.addPlayer(player)
 			return true
 		end
 	else
-		print(message)
+		print("Unable to connect to " .. ENGAGE_URL)
 	end
 
 	return nil
@@ -85,7 +85,7 @@ function module.removePlayer(player)
 			return true
 		end
 	else
-		print(message)
+		print("Unable to connect to " .. ENGAGE_URL)
 	end
 
 	return nil
@@ -110,7 +110,7 @@ function module.getQuestion(player_id)
 			return msg
 		end
 	else
-		print(message)
+		print("Unable to connect to " .. ENGAGE_URL)
 	end
 
 	return nil
@@ -148,7 +148,7 @@ function module.leaveResponse(player_id, instace_id, response, correct, started_
 			return true
 		end
 	else
-		print(message)
+		print("Unable to connect to " .. ENGAGE_URL)
 	end
 
 	return nil
