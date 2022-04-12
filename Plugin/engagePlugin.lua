@@ -26,22 +26,21 @@ end
 newWidgetButton.Click:Connect(onWidgetLaunch)
 
 local Plugin = PluginManager():CreatePlugin()
-local userSecret = Plugin:GetSetting("userSecret")
+local apiKey = Plugin:GetSetting("apiKey")
 
 local apiKeyFrame = Instance.new("Frame", learnWidget)
-apiKeyFrame.Visible = true
 local questionFrame = Instance.new("Frame", learnWidget)
-questionFrame.Visible = false
+
 
 local function buildApiKeyFrame()
 	apiKeyFrame.Size = UDim2.new(1, 0, 1, 0)
-	
+
 	local websiteFrame = Instance.new("Frame", apiKeyFrame)
 	websiteFrame.BorderSizePixel = 0
 	websiteFrame.Position = UDim2.new(0, 0, 0.15, 0)
 	websiteFrame.Size = UDim2.new(1, 0, 0.25, 0)
 	websiteFrame.Visible = true
-	
+
 	-- Website Label
 	local websiteLabel = Instance.new("TextLabel", websiteFrame)
 	websiteLabel.BorderSizePixel = 0
@@ -49,7 +48,7 @@ local function buildApiKeyFrame()
 	websiteLabel.Visible = true
 	websiteLabel.TextScaled = true
 	websiteLabel.Text = "RobloxLearn.com"
-	
+
 	-- Website Logo
 	local motoLabel = Instance.new("TextLabel", websiteFrame)
 	motoLabel.BorderSizePixel = 0
@@ -58,7 +57,7 @@ local function buildApiKeyFrame()
 	motoLabel.Visible = true
 	motoLabel.TextScaled = true
 	motoLabel.Text = "Educational Rails for the Metaverse"
-	
+
 	-- API Key Box
 	local apiKeyBox = Instance.new("TextBox", apiKeyFrame)
 	apiKeyBox.AnchorPoint = Vector2.new(0.5, 0)
@@ -67,7 +66,7 @@ local function buildApiKeyFrame()
 	apiKeyBox.PlaceholderText = "API Key"
 	apiKeyBox.TextScaled = true
 	apiKeyBox.Text = "API Key"
-	
+
 	local function onConnect()
 		print("Connecting!")
 		local code = apiKeyBox.Text
@@ -75,6 +74,10 @@ local function buildApiKeyFrame()
 		-- Attempt to connect to backend
 		if code ~= "" then
 			print("Connecting with " .. code)
+			apiKey = code
+			Plugin:SetSetting("apiKey", apiKey)
+			apiKeyFrame.Visible = false
+			questionFrame.Visible = true
 		end
 	end
 
@@ -91,23 +94,136 @@ local function buildApiKeyFrame()
 end
 
 local function buildQuestionFrame()
+	questionFrame.Size = UDim2.new(1, 0, 1, 0)
+	
+	local logoLabel = Instance.new("TextLabel", questionFrame)
+	logoLabel.BorderSizePixel = 0
+	logoLabel.Size = UDim2.new(1, 0, 0.15, 0)
+	logoLabel.Text = "Roblox Learn"
+	logoLabel.TextScaled = true
+	
+	local function buildZoneFrame()
+		local zoneFrame = Instance.new("Frame", questionFrame)
+		zoneFrame.Position = UDim2.new(0,0,0.15, 0)
+		zoneFrame.Size = UDim2.new(1,0,0.25, 0)
+		zoneFrame.BorderSizePixel = 0
+		
+		local zoneLabel = Instance.new("TextLabel", zoneFrame)
+		zoneLabel.BorderSizePixel = 0
+		zoneLabel.Size = UDim2.new(0.2, 0, 1, 0)
+		zoneLabel.Text = "Zone"
+		zoneLabel.TextScaled = true
+		
+		local zoneBox = Instance.new("TextBox", zoneFrame)
+		zoneBox.BorderSizePixel = 0
+		zoneBox.Position = UDim2.new(0.2, 0, 0, 0)
+		zoneBox.Size = UDim2.new(0.2, 0, 1, 0)
+		zoneBox.Text = "" -- TODO get number of zones -- run a check?
+		zoneBox.PlaceholderText = "#"
+		zoneBox.TextScaled = true
+		
+		local upZoneButton = Instance.new("ImageButton", zoneFrame)
+		upZoneButton.BorderSizePixel = 0
+		upZoneButton.Position = UDim2.new(0.4, 0, 0, 0)
+		upZoneButton.Size = UDim2.new(0.1, 0, 0.5, 0)
+		upZoneButton.Image = "rbxassetid://29563813"
+		
+		local downZoneButton = Instance.new("ImageButton", zoneFrame)
+		downZoneButton.BorderSizePixel = 0
+		downZoneButton.Position = UDim2.new(0.4, 0, 0.5, 0)
+		downZoneButton.Rotation = 180
+		downZoneButton.Size = UDim2.new(0.1, 0, 0.5, 0)
+		downZoneButton.Image = "rbxassetid://29563813"
+		
+		local newZoneButton = Instance.new("ImageButton", zoneFrame)
+		newZoneButton.BorderSizePixel = 0
+		newZoneButton.Position = UDim2.new(0.5, 0, 0, 0)
+		newZoneButton.Size = UDim2.new(0.25, 0, 1, 0)
+		newZoneButton.Image = "rbxassetid://456014731"
+		newZoneButton.ScaleType = Enum.ScaleType.Fit
+		
+		local checkButton = Instance.new("TextButton", zoneFrame)
+		checkButton.BorderSizePixel = 0
+		checkButton.Position = UDim2.new(0.75, 0, 0, 0)
+		checkButton.Size = UDim2.new(0.25, 0, 1, 0)
+		checkButton.Text = "Check"
+		checkButton.TextScaled = true
+	end
+	buildZoneFrame()
+	
+	local function buildOptionsFrame()
+		local optionsFrame = Instance.new("Frame", questionFrame)
+		optionsFrame.AnchorPoint = Vector2.new(0.5, 0)
+		optionsFrame.Position = UDim2.new(0.5, 0, 0.48, 0)
+		optionsFrame.Size = UDim2.new(1, 0, 0.5, 0)
+		optionsFrame.BorderSizePixel = 0
+		
+		local uiGridLayout = Instance.new("UIGridLayout", optionsFrame)
+		uiGridLayout.CellPadding = UDim2.new(0.018, 0,0.1, 0)
+		uiGridLayout.CellSize = UDim2.new(0.179, 0,0.45, 0)
+		uiGridLayout.FillDirection = Enum.FillDirection.Horizontal
+		uiGridLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+		uiGridLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+		uiGridLayout.SortOrder = Enum.SortOrder.LayoutOrder
+		
+		local questionButton = Instance.new("TextButton", optionsFrame)
+		questionButton.Text = "Question"
+		questionButton.TextScaled = true
+		
+		local option1Button = Instance.new("TextButton", optionsFrame)
+		option1Button.Text = "Option 1"
+		option1Button.TextScaled = true
+		
+		local option2Button = Instance.new("TextButton", optionsFrame)
+		option2Button.Text = "Option 2"
+		option2Button.TextScaled = true
+		
+		local option3Button = Instance.new("TextButton", optionsFrame)
+		option3Button.Text = "Option 3"
+		option3Button.TextScaled = true
+		
+		local allButton = Instance.new("TextButton", optionsFrame)
+		allButton.Text = "All"
+		allButton.TextScaled = true
+		
+		local leftSpace = Instance.new("TextLabel", optionsFrame)
+		leftSpace.BorderSizePixel = 0
+		leftSpace.Text = ""
+		
+		local response1Button = Instance.new("TextButton", optionsFrame)
+		response1Button.Text = "Response 1"
+		response1Button.TextScaled = true
+
+		local response2Button = Instance.new("TextButton", optionsFrame)
+		response2Button.Text = "Response 2"
+		response2Button.TextScaled = true
+
+		local response3Button = Instance.new("TextButton", optionsFrame)
+		response3Button.Text = "Response 3"
+		response3Button.TextScaled = true
+		
+	end
+	buildOptionsFrame()
 	
 end
 
 local function syncGuiColors(objects)
-	print(objects)
 	local function setColors()
 		for _, guiObject in pairs(objects) do
-			print(guiObject.Name)
 			
+			if guiObject:isA("UIGridLayout") then
+				continue
+			end
 			-- Sync background color
 			guiObject.BackgroundColor3 = settings().Studio.Theme:GetColor(Enum.StudioStyleGuideColor.MainBackground)
 			
-			if not guiObject:isA("Frame") then
-				-- Sync text color
-				guiObject.TextColor3 = settings().Studio.Theme:GetColor(Enum.StudioStyleGuideColor.MainText)
-				guiObject.BorderColor3 = settings().Studio.Theme:GetColor(Enum.StudioStyleGuideColor.MainText)
+			-- Skip objects
+			if guiObject:isA("Frame") or guiObject:isA("ImageButton") then
+				continue
 			end
+			-- Sync text color
+			guiObject.TextColor3 = settings().Studio.Theme:GetColor(Enum.StudioStyleGuideColor.MainText)
+			guiObject.BorderColor3 = settings().Studio.Theme:GetColor(Enum.StudioStyleGuideColor.MainText)
 		end
 	end
 	-- Run 'setColors()' function to initially sync colors
@@ -118,4 +234,12 @@ end
 
 buildApiKeyFrame()
 buildQuestionFrame()
+
+if apiKeyFrame then
+	apiKeyFrame.Visible = true
+	questionFrame.Visible = false
+else
+	apiKeyFrame.Visible = false
+	questionFrame.Visible = true
+end
 syncGuiColors(learnWidget:GetDescendants())
