@@ -225,6 +225,19 @@ local function buildQuestionFrame()
 
 end
 
+local function findMissingFiles()
+	-- Check the EngageSDK and EngageBackendScript have been installed
+	backendScript = ServerScriptService:FindFirstChild("EngageBackendScript")
+	if not backendScript then
+		return "ServerScriptService/EngageBackendScript"
+	end
+	local ServerStorage = game:GetService("ServerStorage")
+	if not ServerStorage:FindFirstChild("EngageSDK") then
+		return "ServerStorage/EngageSDK"
+	end
+	return nil
+end
+
 local function buildInstallFrame()
 	installFrame.BorderSizePixel = 0
 	installFrame.Size = UDim2.new(1,0,1,0)
@@ -239,7 +252,10 @@ local function buildInstallFrame()
 	missingFilesLabel.BorderSizePixel = 0
 	missingFilesLabel.Position = UDim2.new(0,0,0.25,0)
 	missingFilesLabel.Size = UDim2.new(1,0,0.1,0)
-	missingFilesLabel.Text = "'ServerStorage/EngageSDK'"
+	local missingFiles = findMissingFiles()
+	if missingFiles then
+		missingFilesLabel.Text = "'" .. missingFiles .. "'"
+	end
 	missingFilesLabel.TextScaled = true
 	
 	local line2Label = Instance.new("TextLabel", installFrame)
@@ -275,20 +291,19 @@ local function buildInstallFrame()
 	updateButton.Text = "Recheck Install"
 	updateButton.TextScaled = true
 	
+	updateButton.MouseButton1Click:Connect(function()
+		
+		local missingFile = findMissingFiles()
+		if missingFile then
+			missingFilesLabel.Text = "'" .. missingFile .. "'"
+		else
+			setVisibleFrame("question")
+		end
+	end)
+	
 end
 
-local function checkEngageInstall()
-	-- Check the EngageSDK and EngageBackendScript have been installed
-	backendScript = ServerScriptService:FindFirstChild("EngageBackendScript")
-	if not backendScript then
-		return false
-	end
-	local ServerStorage = game:GetService("ServerStorage")
-	if not ServerStorage:FindFirstChild("EngageSDK") then
-		return false
-	end
-	return true
-end
+
 
 local function syncGuiColors(objects)
 	local function setColors()
@@ -324,7 +339,7 @@ if not apiKeyFrame then
 	setVisibleFrame("api")
 
 -- Check that the module has been installed
-elseif not checkEngageInstall() then	
+elseif findMissingFiles() then	
 	setVisibleFrame("install")
 -- Everything is ready to go
 else
