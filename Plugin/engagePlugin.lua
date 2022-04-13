@@ -35,6 +35,9 @@ local installFrame = Instance.new("Frame", learnWidget)
 local ServerScriptService = game:GetService("ServerScriptService")
 local backendScript
 
+-- Question Zone attributes
+local zoneBox
+
 local function setVisibleFrame(frame)
 	apiKeyFrame.Visible = false
 	questionFrame.Visible = false
@@ -47,6 +50,20 @@ local function setVisibleFrame(frame)
 	else
 		installFrame.Visible = true
 	end
+end
+
+local function getMaxZoneNumber()
+	return backendScript:GetAttribute("EngageZones")
+end
+
+local function incrementMaxZoneNumber()
+	
+	-- We must have an object selected & we'll mark it with the zone number
+	
+	local numZones = getMaxZoneNumber()
+	local newNumZones = numZones + 1
+	backendScript:SetAttribute("EngageZones", newNumZones)
+	zoneBox.Text = tostring(newNumZones)
 end
 
 local function buildApiKeyFrame()
@@ -131,11 +148,11 @@ local function buildQuestionFrame()
 		zoneLabel.Text = "Zone"
 		zoneLabel.TextScaled = true
 
-		local zoneBox = Instance.new("TextBox", zoneFrame)
+		zoneBox = Instance.new("TextBox", zoneFrame)
 		zoneBox.BorderSizePixel = 0
 		zoneBox.Position = UDim2.new(0.2, 0, 0, 0)
 		zoneBox.Size = UDim2.new(0.2, 0, 1, 0)
-		zoneBox.Text = "" -- TODO get number of zones -- run a check?
+		zoneBox.Text = tostring(getMaxZoneNumber())
 		zoneBox.PlaceholderText = "#"
 		zoneBox.TextScaled = true
 
@@ -302,7 +319,6 @@ local function buildInstallFrame()
 	end)
 	
 end
-
 
 
 local function syncGuiColors(objects)
