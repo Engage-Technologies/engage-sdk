@@ -30,7 +30,24 @@ local apiKey = Plugin:GetSetting("apiKey")
 
 local apiKeyFrame = Instance.new("Frame", learnWidget)
 local questionFrame = Instance.new("Frame", learnWidget)
+local installFrame = Instance.new("Frame", learnWidget)
 
+local ServerScriptService = game:GetService("ServerScriptService")
+local backendScript
+
+local function setVisibleFrame(frame)
+	apiKeyFrame.Visible = false
+	questionFrame.Visible = false
+	installFrame.Visible = false
+	
+	if frame == "api" then
+		apiKeyFrame.Visible = true
+	elseif frame == "question" then
+		questionFrame.Visible = true
+	else
+		installFrame.Visible = true
+	end
+end
 
 local function buildApiKeyFrame()
 	apiKeyFrame.Size = UDim2.new(1, 0, 1, 0)
@@ -95,25 +112,25 @@ end
 
 local function buildQuestionFrame()
 	questionFrame.Size = UDim2.new(1, 0, 1, 0)
-	
+
 	local logoLabel = Instance.new("TextLabel", questionFrame)
 	logoLabel.BorderSizePixel = 0
 	logoLabel.Size = UDim2.new(1, 0, 0.15, 0)
 	logoLabel.Text = "Roblox Learn"
 	logoLabel.TextScaled = true
-	
+
 	local function buildZoneFrame()
 		local zoneFrame = Instance.new("Frame", questionFrame)
 		zoneFrame.Position = UDim2.new(0,0,0.15, 0)
 		zoneFrame.Size = UDim2.new(1,0,0.25, 0)
 		zoneFrame.BorderSizePixel = 0
-		
+
 		local zoneLabel = Instance.new("TextLabel", zoneFrame)
 		zoneLabel.BorderSizePixel = 0
 		zoneLabel.Size = UDim2.new(0.2, 0, 1, 0)
 		zoneLabel.Text = "Zone"
 		zoneLabel.TextScaled = true
-		
+
 		local zoneBox = Instance.new("TextBox", zoneFrame)
 		zoneBox.BorderSizePixel = 0
 		zoneBox.Position = UDim2.new(0.2, 0, 0, 0)
@@ -121,27 +138,28 @@ local function buildQuestionFrame()
 		zoneBox.Text = "" -- TODO get number of zones -- run a check?
 		zoneBox.PlaceholderText = "#"
 		zoneBox.TextScaled = true
-		
+
 		local upZoneButton = Instance.new("ImageButton", zoneFrame)
 		upZoneButton.BorderSizePixel = 0
 		upZoneButton.Position = UDim2.new(0.4, 0, 0, 0)
 		upZoneButton.Size = UDim2.new(0.1, 0, 0.5, 0)
 		upZoneButton.Image = "rbxassetid://29563813"
-		
+
 		local downZoneButton = Instance.new("ImageButton", zoneFrame)
 		downZoneButton.BorderSizePixel = 0
 		downZoneButton.Position = UDim2.new(0.4, 0, 0.5, 0)
 		downZoneButton.Rotation = 180
 		downZoneButton.Size = UDim2.new(0.1, 0, 0.5, 0)
 		downZoneButton.Image = "rbxassetid://29563813"
-		
+
 		local newZoneButton = Instance.new("ImageButton", zoneFrame)
 		newZoneButton.BorderSizePixel = 0
-		newZoneButton.Position = UDim2.new(0.5, 0, 0, 0)
-		newZoneButton.Size = UDim2.new(0.25, 0, 1, 0)
+		newZoneButton.AnchorPoint = Vector2.new(0.5, 0.5)
+		newZoneButton.Position = UDim2.new(0.625, 0, 0.5, 0)
+		newZoneButton.Size = UDim2.new(0.25, 0, 0.75, 0)
 		newZoneButton.Image = "rbxassetid://456014731"
 		newZoneButton.ScaleType = Enum.ScaleType.Fit
-		
+
 		local checkButton = Instance.new("TextButton", zoneFrame)
 		checkButton.BorderSizePixel = 0
 		checkButton.Position = UDim2.new(0.75, 0, 0, 0)
@@ -150,14 +168,14 @@ local function buildQuestionFrame()
 		checkButton.TextScaled = true
 	end
 	buildZoneFrame()
-	
+
 	local function buildOptionsFrame()
 		local optionsFrame = Instance.new("Frame", questionFrame)
 		optionsFrame.AnchorPoint = Vector2.new(0.5, 0)
 		optionsFrame.Position = UDim2.new(0.5, 0, 0.48, 0)
 		optionsFrame.Size = UDim2.new(1, 0, 0.5, 0)
 		optionsFrame.BorderSizePixel = 0
-		
+
 		local uiGridLayout = Instance.new("UIGridLayout", optionsFrame)
 		uiGridLayout.CellPadding = UDim2.new(0.018, 0,0.1, 0)
 		uiGridLayout.CellSize = UDim2.new(0.179, 0,0.45, 0)
@@ -165,31 +183,31 @@ local function buildQuestionFrame()
 		uiGridLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 		uiGridLayout.VerticalAlignment = Enum.VerticalAlignment.Center
 		uiGridLayout.SortOrder = Enum.SortOrder.LayoutOrder
-		
+
 		local questionButton = Instance.new("TextButton", optionsFrame)
 		questionButton.Text = "Question"
 		questionButton.TextScaled = true
-		
+
 		local option1Button = Instance.new("TextButton", optionsFrame)
 		option1Button.Text = "Option 1"
 		option1Button.TextScaled = true
-		
+
 		local option2Button = Instance.new("TextButton", optionsFrame)
 		option2Button.Text = "Option 2"
 		option2Button.TextScaled = true
-		
+
 		local option3Button = Instance.new("TextButton", optionsFrame)
 		option3Button.Text = "Option 3"
 		option3Button.TextScaled = true
-		
+
 		local allButton = Instance.new("TextButton", optionsFrame)
 		allButton.Text = "All"
 		allButton.TextScaled = true
-		
+
 		local leftSpace = Instance.new("TextLabel", optionsFrame)
 		leftSpace.BorderSizePixel = 0
 		leftSpace.Text = ""
-		
+
 		local response1Button = Instance.new("TextButton", optionsFrame)
 		response1Button.Text = "Response 1"
 		response1Button.TextScaled = true
@@ -201,22 +219,87 @@ local function buildQuestionFrame()
 		local response3Button = Instance.new("TextButton", optionsFrame)
 		response3Button.Text = "Response 3"
 		response3Button.TextScaled = true
-		
+
 	end
 	buildOptionsFrame()
+
+end
+
+local function buildInstallFrame()
+	installFrame.BorderSizePixel = 0
+	installFrame.Size = UDim2.new(1,0,1,0)
 	
+	local line1Label = Instance.new("TextLabel", installFrame)
+	line1Label.BorderSizePixel = 0
+	line1Label.Size = UDim2.new(1,0,0.2,0)
+	line1Label.Text = "Missing Installation File(s):"
+	line1Label.TextScaled = true
+	
+	local missingFilesLabel = Instance.new("TextLabel", installFrame)
+	missingFilesLabel.BorderSizePixel = 0
+	missingFilesLabel.Position = UDim2.new(0,0,0.25,0)
+	missingFilesLabel.Size = UDim2.new(1,0,0.1,0)
+	missingFilesLabel.Text = "'ServerStorage/EngageSDK'"
+	missingFilesLabel.TextScaled = true
+	
+	local line2Label = Instance.new("TextLabel", installFrame)
+	line2Label.BorderSizePixel = 0
+	line2Label.Size = UDim2.new(1,0,0.1,0)
+	line2Label.Position = UDim2.new(0,0,0.4,0)
+	line2Label.Text = "Please go to"
+	line2Label.TextScaled = true
+	
+	local githubBox = Instance.new("TextBox", installFrame)
+	githubBox.BorderSizePixel = 0
+	githubBox.Position = UDim2.new(0,0,0.5,0)
+	githubBox.Size = UDim2.new(1,0,0.1,0)
+	githubBox.Text = "https://github.com/Engage-Technologies/engage-sdk"
+	githubBox.TextScaled = true
+	githubBox.TextEditable = false
+	githubBox.Selectable = true
+	githubBox.ClearTextOnFocus = false
+	
+	local line3Label = Instance.new("TextLabel", installFrame)
+	line3Label.BorderSizePixel = 0
+	line3Label.Position = UDim2.new(0, 0, 0.6, 0)
+	line3Label.Size = UDim2.new(1,0,0.1,0)
+	line3Label.Text = "for installation instructions."
+	line3Label.TextScaled = true
+	
+	local updateButton = Instance.new("TextButton", installFrame)
+	updateButton.AnchorPoint = Vector2.new(0.5,0)
+	updateButton.BorderSizePixel = 1
+	updateButton.Position = UDim2.new(0.5, 0, 0.75, 0)
+	updateButton.Selectable = true
+	updateButton.Size = UDim2.new(0.5, 0, 0.2, 0)
+	updateButton.Text = "Recheck Install"
+	updateButton.TextScaled = true
+	
+end
+
+local function checkEngageInstall()
+	-- Check the EngageSDK and EngageBackendScript have been installed
+	backendScript = ServerScriptService:FindFirstChild("EngageBackendScript")
+	if not backendScript then
+		return false
+	end
+	local ServerStorage = game:GetService("ServerStorage")
+	if not ServerStorage:FindFirstChild("EngageSDK") then
+		return false
+	end
+	return true
 end
 
 local function syncGuiColors(objects)
 	local function setColors()
 		for _, guiObject in pairs(objects) do
-			
+
 			if guiObject:isA("UIGridLayout") then
 				continue
 			end
 			-- Sync background color
 			guiObject.BackgroundColor3 = settings().Studio.Theme:GetColor(Enum.StudioStyleGuideColor.MainBackground)
-			
+
 			-- Skip objects
 			if guiObject:isA("Frame") or guiObject:isA("ImageButton") then
 				continue
@@ -234,12 +317,18 @@ end
 
 buildApiKeyFrame()
 buildQuestionFrame()
+buildInstallFrame()
 
-if apiKeyFrame then
-	apiKeyFrame.Visible = true
-	questionFrame.Visible = false
+-- Get the Engage API Code
+if not apiKeyFrame then
+	setVisibleFrame("api")
+
+-- Check that the module has been installed
+elseif not checkEngageInstall() then	
+	setVisibleFrame("install")
+-- Everything is ready to go
 else
-	apiKeyFrame.Visible = false
-	questionFrame.Visible = true
+	setVisibleFrame("question")
 end
+
 syncGuiColors(learnWidget:GetDescendants())
