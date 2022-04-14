@@ -1,5 +1,5 @@
 -- Create a new toolbar section titled "Custom Script Tools"
-
+local Selection = game:GetService("Selection")
 
 local toolbar = plugin:CreateToolbar("Learn 1.0.0")
 
@@ -31,6 +31,7 @@ local apiKey = Plugin:GetSetting("apiKey")
 local apiKeyFrame = Instance.new("Frame", learnWidget)
 local questionFrame = Instance.new("Frame", learnWidget)
 local installFrame = Instance.new("Frame", learnWidget)
+local surfacePlacementFrame = Instance.new("Frame", learnWidget)
 
 local ServerScriptService = game:GetService("ServerScriptService")
 local backendScript
@@ -42,11 +43,14 @@ local function setVisibleFrame(frame)
 	apiKeyFrame.Visible = false
 	questionFrame.Visible = false
 	installFrame.Visible = false
+	surfacePlacementFrame.Visible = false
 	
 	if frame == "api" then
 		apiKeyFrame.Visible = true
 	elseif frame == "question" then
 		questionFrame.Visible = true
+	elseif frame == "surface" then
+		surfacePlacementFrame.Visible = true
 	else
 		installFrame.Visible = true
 	end
@@ -143,43 +147,66 @@ local function buildQuestionFrame()
 		zoneFrame.BorderSizePixel = 0
 
 		local zoneLabel = Instance.new("TextLabel", zoneFrame)
+		zoneLabel.AnchorPoint = Vector2.new(0.5 ,0)
 		zoneLabel.BorderSizePixel = 0
+		zoneLabel.Position = UDim2.new(0.15, 0, 0, 0)
 		zoneLabel.Size = UDim2.new(0.2, 0, 1, 0)
 		zoneLabel.Text = "Zone"
 		zoneLabel.TextScaled = true
 
 		zoneBox = Instance.new("TextBox", zoneFrame)
+		zoneBox.AnchorPoint = Vector2.new(0.5 ,0)
 		zoneBox.BorderSizePixel = 0
-		zoneBox.Position = UDim2.new(0.2, 0, 0, 0)
+		zoneBox.Position = UDim2.new(0.35, 0, 0, 0)
 		zoneBox.Size = UDim2.new(0.2, 0, 1, 0)
 		zoneBox.Text = tostring(getMaxZoneNumber())
 		zoneBox.PlaceholderText = "#"
 		zoneBox.TextScaled = true
 
 		local upZoneButton = Instance.new("ImageButton", zoneFrame)
+		upZoneButton.AnchorPoint = Vector2.new(0.5, 0)
 		upZoneButton.BorderSizePixel = 0
-		upZoneButton.Position = UDim2.new(0.4, 0, 0, 0)
-		upZoneButton.Size = UDim2.new(0.1, 0, 0.5, 0)
+		upZoneButton.Position = UDim2.new(0.55, 0, 0, 0)
+		upZoneButton.Size = UDim2.new(0.15, 0, 0.5, 0)
 		upZoneButton.Image = "rbxassetid://29563813"
+		
+		upZoneButton.MouseButton1Click:Connect(function()
+			-- Get the new zone number
+			-- Check if it's less than the maxZoneNumber and increment
+			local newZoneNum = tonumber(zoneBox.Text) + 1
+			if newZoneNum > getMaxZoneNumber() then
+				incrementMaxZoneNumber()
+			end
+			zoneBox.Text = tostring(newZoneNum)
+			-- TODO check if we have an object selected and change all of the selected Object's engageZone numbers
+		end)
 
 		local downZoneButton = Instance.new("ImageButton", zoneFrame)
+		downZoneButton.AnchorPoint = Vector2.new(0.5, 0)
 		downZoneButton.BorderSizePixel = 0
-		downZoneButton.Position = UDim2.new(0.4, 0, 0.5, 0)
+		downZoneButton.Position = UDim2.new(0.55, 0, 0.5, 0)
 		downZoneButton.Rotation = 180
-		downZoneButton.Size = UDim2.new(0.1, 0, 0.5, 0)
+		downZoneButton.Size = UDim2.new(0.15, 0, 0.5, 0)
 		downZoneButton.Image = "rbxassetid://29563813"
+		
+		downZoneButton.MouseButton1Click:Connect(function()
+			local newZoneNum = math.max( tonumber(zoneBox.Text) - 1, 1)
+			zoneBox.Text = tostring(newZoneNum)
+			-- TODO same check about object selected and incrementing
+		end)
 
-		local newZoneButton = Instance.new("ImageButton", zoneFrame)
-		newZoneButton.BorderSizePixel = 0
-		newZoneButton.AnchorPoint = Vector2.new(0.5, 0.5)
-		newZoneButton.Position = UDim2.new(0.625, 0, 0.5, 0)
-		newZoneButton.Size = UDim2.new(0.25, 0, 0.75, 0)
-		newZoneButton.Image = "rbxassetid://456014731"
-		newZoneButton.ScaleType = Enum.ScaleType.Fit
+		--local newZoneButton = Instance.new("ImageButton", zoneFrame)
+		--newZoneButton.BorderSizePixel = 0
+		--newZoneButton.AnchorPoint = Vector2.new(0.5, 0.5)
+		--newZoneButton.Position = UDim2.new(0.625, 0, 0.5, 0)
+		--newZoneButton.Size = UDim2.new(0.25, 0, 0.75, 0)
+		--newZoneButton.Image = "rbxassetid://456014731"
+		--newZoneButton.ScaleType = Enum.ScaleType.Fit
 
 		local checkButton = Instance.new("TextButton", zoneFrame)
+		checkButton.AnchorPoint = Vector2.new(0.5, 0)
 		checkButton.BorderSizePixel = 0
-		checkButton.Position = UDim2.new(0.75, 0, 0, 0)
+		checkButton.Position = UDim2.new(0.85, 0, 0, 0)
 		checkButton.Size = UDim2.new(0.25, 0, 1, 0)
 		checkButton.Text = "Check"
 		checkButton.TextScaled = true
@@ -204,6 +231,21 @@ local function buildQuestionFrame()
 		local questionButton = Instance.new("TextButton", optionsFrame)
 		questionButton.Text = "Question"
 		questionButton.TextScaled = true
+		questionButton.MouseButton1Click:Connect(function()
+			local selection = Selection:Get()
+			if #selection > 1 then
+				print("[ERROR] Only select one object to place the question on.")
+				return
+			end
+			
+			local questionObj = selection[1]
+			
+			local surfaceGUI = questionObj:FindFirstChildWhichIsA("SurfaceGui")
+			if not surfaceGUI then
+				surfaceGUI = Instance.new("SurfaceGui", questionObj)
+				
+			end
+		end)
 
 		local option1Button = Instance.new("TextButton", optionsFrame)
 		option1Button.Text = "Option 1"
@@ -320,6 +362,65 @@ local function buildInstallFrame()
 	
 end
 
+local function buildSurfacePlacementFrame()
+	surfacePlacementFrame.BorderSizePixel = 0
+	surfacePlacementFrame.Size = UDim2.new(1,0,1,0)
+	
+	local bannerLabel = Instance.new("TextLabel", surfacePlacementFrame)
+	bannerLabel.Size = UDim2.new(1,0,0.2,0)
+	bannerLabel.Text = "Select Surface Side"
+	bannerLabel.TextScaled = true
+	
+	local frame = Instance.new("Frame", surfacePlacementFrame)
+	frame.Position = UDim2.new(0,0,0.2,0)
+	frame.Size = UDim2.new(1,0,0.6, 0)
+	
+	local function buildFrame()
+		local uiGridLayout = Instance.new("UIGridLayout", frame)
+		uiGridLayout.CellPadding = UDim2.new(0.03, 0, 0.05, 0)
+		uiGridLayout.CellSize = UDim2.new(0.25, 0, 0.35, 0)
+		uiGridLayout.FillDirection = Enum.FillDirection.Horizontal
+		uiGridLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+		uiGridLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+		
+		local function surfaceSideCallback(surfaceSide)
+			
+		end
+		
+		local backButton = Instance.new("TextButton", frame)
+		backButton.Text = "Back"
+		backButton.TextScaled = true
+		
+		local bottomButton = Instance.new("TextButton", frame)
+		bottomButton.Text = "Bottom"
+		bottomButton.TextScaled = true
+		
+		local frontButton = Instance.new("TextButton", frame)
+		frontButton.Text = "Front"
+		frontButton.TextScaled = true
+		
+		local leftButton = Instance.new("TextButton", frame)
+		leftButton.Text = "Left"
+		leftButton.TextScaled = true
+		
+		local rightButton = Instance.new("TextButton", frame)
+		rightButton.Text = "Right"
+		rightButton.TextScaled = true
+		
+		local topButton = Instance.new("TextButton", frame)
+		topButton.Text = "Topp"
+		topButton.TextScaled = true
+	end
+	buildFrame()
+	
+	local doneButton = Instance.new("TextButton", surfacePlacementFrame)
+	doneButton.Position = UDim2.new(0,0,0.8,0)
+	doneButton.Size = UDim2.new(1,0,0.2,0)
+	doneButton.Text = "Done"
+	doneButton.TextScaled = true
+	
+end
+
 
 local function syncGuiColors(objects)
 	local function setColors()
@@ -347,8 +448,8 @@ local function syncGuiColors(objects)
 end
 
 buildApiKeyFrame()
-buildQuestionFrame()
 buildInstallFrame()
+buildQuestionFrame()
 
 -- Get the Engage API Code
 if not apiKeyFrame then
