@@ -3,15 +3,6 @@ local module = {}
 local engageSDKFolder = script.Parent
 local engageAPIWrapper = require(engageSDKFolder.EngageAPIWrapper)
 
-function module.extractQuestionInfo(_type, option_num, message)
-	local relevantTable
-	if _type == "option" then
-		return message["options"][option_num]
-	end
-	return message[_type]
-	
-end
-
 local function shuffleOptions(questionInfo)
 	-- Put the options and answer in a list and mix
 
