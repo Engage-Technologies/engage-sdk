@@ -275,6 +275,8 @@ local function buildQuestionFrame()
 			imageLabel.Visible = false
 			imageLabel.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 			imageLabel.BackgroundTransparency = 1
+			imageLabel.AnchorPoint = Vector2.new(0.5,0.5)
+			imageLabel.Position = UDim2.new(0.5,0,0.5,0)
 			local textLabel = Instance.new("TextLabel", componentFrame)
 			textLabel.Size = UDim2.new(1,0,1,0)
 			textLabel.TextScaled = true
@@ -318,7 +320,6 @@ local function buildQuestionFrame()
 			for key, value in pairs(zoneComponents) do
 				if value.Parent == surfaceGUI then
 					allComponents[key] = value
-					print(key)
 				end
 			end
 			
@@ -402,18 +403,49 @@ local function buildQuestionFrame()
 		local leftSpace = Instance.new("TextLabel", optionsFrame)
 		leftSpace.BorderSizePixel = 0
 		leftSpace.Text = ""
+		
+		local function addResponse(responseType)
+			-- Check correct selection
+			local selection = Selection:Get()
+			if #selection > 1 then
+				print("[ERROR] Only select one object to place the question/option on.")
+				return
+			end
+			local componentObj = selection[1]
+
+			-- Check we have tagged this object
+			local tagName = "QuestionZone" .. tostring(getCurrentZoneNumber())
+			if not CollectionService:HasTag(componentObj, tagName) then
+				CollectionService:AddTag(componentObj, tagName)
+			end
+			
+			if componentObj:GetAttribute("EngageType") ~= nil then
+				componentObj:SetAttribute("EngageType", nil)
+			else
+				componentObj:SetAttribute("EngageType", responseType)
+			end
+		end
 
 		local response1Button = Instance.new("TextButton", optionsFrame)
 		response1Button.Text = "Response 1"
 		response1Button.TextScaled = true
+		response1Button.MouseButton1Click:Connect(function()
+			addResponse("response1")
+		end)
 
 		local response2Button = Instance.new("TextButton", optionsFrame)
 		response2Button.Text = "Response 2"
 		response2Button.TextScaled = true
+		response2Button.MouseButton1Click:Connect(function()
+			addResponse("response2")
+		end)
 
 		local response3Button = Instance.new("TextButton", optionsFrame)
 		response3Button.Text = "Response 3"
 		response3Button.TextScaled = true
+		response3Button.MouseButton1Click:Connect(function()
+			addResponse("response3")
+		end)
 
 	end
 	buildOptionsFrame()
