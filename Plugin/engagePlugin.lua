@@ -303,7 +303,6 @@ local function buildQuestionFrame()
 			-- Check if we have a surface GUI
 			local surfaceGUI = componentObj:FindFirstChildWhichIsA("SurfaceGui")
 			if not surfaceGUI then
-				print("Adding surface placement")
 				surfaceGUI = Instance.new("SurfaceGui", componentObj)
 				surfaceGUI.SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud
 				setVisibleFrame("surface")
@@ -315,8 +314,9 @@ local function buildQuestionFrame()
 			-- All components on our surface
 			local allComponents = {}
 			for key, value in pairs(zoneComponents) do
-				if value.Parent == componentObj then
+				if value.Parent == surfaceGUI then
 					allComponents[key] = value
+					print(key)
 				end
 			end
 			
@@ -331,15 +331,11 @@ local function buildQuestionFrame()
 			local numComponents = 0
 			for key, value in pairs(allComponents) do
 				numComponents += 1
-				print(key)
 			end
-			
-			print("Num components: " .. tostring(numComponents))
 			
 			local optionsHeight = 1.0
 			local numOptions = numComponents
 			if allComponents["question"] ~= nil and numComponents > 1 then
-				print("Question and option")
 				optionsHeight = 0.5
 				numOptions = numComponents - 1
 				allComponents["question"].Size = UDim2.new(1,0,0.5,0)
@@ -352,7 +348,6 @@ local function buildQuestionFrame()
 			local sizeIncrement = 1 / numOptions
 			for i, option in ipairs({"option1", "option2", "option3"}) do
 				if allComponents[option] then
-					print("Placing " .. option)
 					allComponents[option].Size = UDim2.new(sizeIncrement, 0, optionsHeight, 0)
 					allComponents[option].Position = UDim2.new(sizeIncrement * count, 0, 1 - optionsHeight, 0)
 					count += 1
@@ -392,6 +387,7 @@ local function buildQuestionFrame()
 		local allButton = Instance.new("TextButton", optionsFrame)
 		allButton.Text = "All"
 		allButton.TextScaled = true
+		-- TODO could we call handleNewComponent 3x??
 
 		local leftSpace = Instance.new("TextLabel", optionsFrame)
 		leftSpace.BorderSizePixel = 0
