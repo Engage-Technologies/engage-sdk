@@ -285,7 +285,9 @@ local function buildQuestionFrame()
 			return componentFrame
 		end
 		
-		local function handleNewComponent(component)
+		local function handleNewComponent(component, onlyAdd)
+			onlyAdd = onlyAdd or false
+			
 			-- Check correct selection
 			local selection = Selection:Get()
 			if #selection > 1 then
@@ -321,9 +323,11 @@ local function buildQuestionFrame()
 			end
 			
 			-- Check if component is already present to remove it
-			if allComponents[component:lower()] then
+			if allComponents[component:lower()] and not onlyAdd then
 				allComponents[component:lower()]:Destroy()
 				allComponents[component:lower()] = nil
+			elseif allComponents[component:lower()] then
+				-- Do nothing..
 			else
 				allComponents[component:lower()] = createNewFrame(surfaceGUI, component)
 			end
@@ -387,6 +391,12 @@ local function buildQuestionFrame()
 		local allButton = Instance.new("TextButton", optionsFrame)
 		allButton.Text = "All"
 		allButton.TextScaled = true
+		allButton.MouseButton1Click:Connect(function()
+			handleNewComponent("Question", true)
+			handleNewComponent("Option1", true)
+			handleNewComponent("Option2", true)
+			handleNewComponent("Option3", true)
+		end)
 		-- TODO could we call handleNewComponent 3x??
 
 		local leftSpace = Instance.new("TextLabel", optionsFrame)
