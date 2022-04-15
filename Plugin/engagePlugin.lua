@@ -263,6 +263,99 @@ local function buildQuestionFrame()
 		uiGridLayout.VerticalAlignment = Enum.VerticalAlignment.Center
 		uiGridLayout.SortOrder = Enum.SortOrder.LayoutOrder
 		
+		local questionButton = Instance.new("TextButton", optionsFrame)
+		questionButton.Text = "Question"
+		questionButton.TextScaled = true
+
+		local option1Button = Instance.new("TextButton", optionsFrame)
+		option1Button.Text = "Option 1"
+		option1Button.TextScaled = true
+
+		local option2Button = Instance.new("TextButton", optionsFrame)
+		option2Button.Text = "Option 2"
+		option2Button.TextScaled = true
+
+		local option3Button = Instance.new("TextButton", optionsFrame)
+		option3Button.Text = "Option 3"
+		option3Button.TextScaled = true
+
+		local allButton = Instance.new("TextButton", optionsFrame)
+		allButton.Text = "All"
+		allButton.TextScaled = true
+
+		local leftSpace = Instance.new("TextLabel", optionsFrame)
+		leftSpace.BorderSizePixel = 0
+		leftSpace.Text = ""
+
+		local response1Button = Instance.new("TextButton", optionsFrame)
+		response1Button.Text = "Response 1"
+		response1Button.TextScaled = true
+
+		local response2Button = Instance.new("TextButton", optionsFrame)
+		response2Button.Text = "Response 2"
+		response2Button.TextScaled = true
+
+		local response3Button = Instance.new("TextButton", optionsFrame)
+		response3Button.Text = "Response 3"
+		response3Button.TextScaled = true
+		
+		--local function redrawButtons()
+		--	local zoneComponents = engageSDK.findZoneComponents(getCurrentZoneNumber(), {"question", "option","response"})
+			
+		--	local alreadyPlacedColor = Color3.fromRGB(0, 0, 0)
+		--	local notPlacedColor = settings().Studio.Theme:GetColor(Enum.StudioStyleGuideColor.MainBackground)
+			
+		--	-- Question Button
+		--	if zoneComponents["question"] then
+		--		questionButton.BackgroundColor3 = alreadyPlacedColor
+		--	else
+		--		questionButton.BackgroundColor3 = notPlacedColor
+		--	end
+			
+		--	-- Option1 Button
+		--	if zoneComponents["option1"] then
+		--		option1Button.BackgroundColor3 = alreadyPlacedColor
+		--	else
+		--		option1Button.BackgroundColor3 = notPlacedColor
+		--	end
+			
+		--	-- Option2 Button
+		--	if zoneComponents["option2"] then
+		--		option2Button.BackgroundColor3 = alreadyPlacedColor
+		--	else
+		--		option2Button.BackgroundColor3 = notPlacedColor
+		--	end
+			
+		--	-- Option3 Button
+		--	if zoneComponents["option3"] then
+		--		option3Button.BackgroundColor3 = alreadyPlacedColor
+		--	else
+		--		option3Button.BackgroundColor3 = notPlacedColor
+		--	end
+			
+		--	-- Response1 Button
+		--	if zoneComponents["response1"] then
+		--		response1Button.BackgroundColor3 = alreadyPlacedColor
+		--	else
+		--		response1Button.BackgroundColor3 = notPlacedColor
+		--	end
+			
+		--	-- Response2 Button
+		--	if zoneComponents["response2"] then
+		--		response2Button.BackgroundColor3 = alreadyPlacedColor
+		--	else
+		--		response2Button.BackgroundColor3 = notPlacedColor
+		--	end
+			
+		--	-- Response3 Button
+		--	if zoneComponents["response3"] then
+		--		response3Button.BackgroundColor3 = alreadyPlacedColor
+		--	else
+		--		response3Button.BackgroundColor3 = notPlacedColor
+		--	end
+		--end
+		--redrawButtons()
+		
 		local function createNewFrame(parent, componentType)
 			local componentFrame = Instance.new("Frame", parent)
 			componentFrame:SetAttribute("EngageType", componentType:lower())
@@ -359,50 +452,9 @@ local function buildQuestionFrame()
 				end
 			end
 			
+			-- Update button colors
+			--redrawButtons()
 		end
-
-		local questionButton = Instance.new("TextButton", optionsFrame)
-		questionButton.Text = "Question"
-		questionButton.TextScaled = true
-		questionButton.MouseButton1Click:Connect(function()			
-			handleNewComponent("Question")
-		end)
-
-		local option1Button = Instance.new("TextButton", optionsFrame)
-		option1Button.Text = "Option 1"
-		option1Button.TextScaled = true
-		option1Button.MouseButton1Click:Connect(function()
-			handleNewComponent("Option1")
-		end)
-
-		local option2Button = Instance.new("TextButton", optionsFrame)
-		option2Button.Text = "Option 2"
-		option2Button.TextScaled = true
-		option2Button.MouseButton1Click:Connect(function()
-			handleNewComponent("Option2")
-		end)
-
-		local option3Button = Instance.new("TextButton", optionsFrame)
-		option3Button.Text = "Option 3"
-		option3Button.TextScaled = true
-		option3Button.MouseButton1Click:Connect(function()
-			handleNewComponent("Option3")
-		end)
-
-		local allButton = Instance.new("TextButton", optionsFrame)
-		allButton.Text = "All"
-		allButton.TextScaled = true
-		allButton.MouseButton1Click:Connect(function()
-			handleNewComponent("Question", true)
-			handleNewComponent("Option1", true)
-			handleNewComponent("Option2", true)
-			handleNewComponent("Option3", true)
-		end)
-		-- TODO could we call handleNewComponent 3x??
-
-		local leftSpace = Instance.new("TextLabel", optionsFrame)
-		leftSpace.BorderSizePixel = 0
-		leftSpace.Text = ""
 		
 		local function addResponse(responseType)
 			-- Check correct selection
@@ -426,23 +478,33 @@ local function buildQuestionFrame()
 			end
 		end
 
-		local response1Button = Instance.new("TextButton", optionsFrame)
-		response1Button.Text = "Response 1"
-		response1Button.TextScaled = true
+		
+		
+		-- Callbacks
+		questionButton.MouseButton1Click:Connect(function()			
+			handleNewComponent("Question")
+		end)
+		option1Button.MouseButton1Click:Connect(function()
+			handleNewComponent("Option1")
+		end)
+		option2Button.MouseButton1Click:Connect(function()
+			handleNewComponent("Option2")
+		end)
+		option3Button.MouseButton1Click:Connect(function()
+			handleNewComponent("Option3")
+		end)
+		allButton.MouseButton1Click:Connect(function()
+			handleNewComponent("Question", true)
+			handleNewComponent("Option1", true)
+			handleNewComponent("Option2", true)
+			handleNewComponent("Option3", true)
+		end)
 		response1Button.MouseButton1Click:Connect(function()
 			addResponse("response1")
 		end)
-
-		local response2Button = Instance.new("TextButton", optionsFrame)
-		response2Button.Text = "Response 2"
-		response2Button.TextScaled = true
 		response2Button.MouseButton1Click:Connect(function()
 			addResponse("response2")
 		end)
-
-		local response3Button = Instance.new("TextButton", optionsFrame)
-		response3Button.Text = "Response 3"
-		response3Button.TextScaled = true
 		response3Button.MouseButton1Click:Connect(function()
 			addResponse("response3")
 		end)
@@ -596,6 +658,25 @@ local function buildSurfacePlacementFrame()
 	end)
 	
 end
+
+Selection.SelectionChanged:Connect(function()
+	
+	for i, selection in ipairs(Selection:Get()) do
+		
+		local tags = CollectionService:GetTags(selection)
+		
+		for j, tag in ipairs(tags) do
+			
+			if tag:match("QuestionZone") then
+				
+				local newZoneNum, replaced = tag:gsub("QuestionZone", "")
+				setCurrentZoneNumber(tonumber(newZoneNum))
+				return
+			end
+			
+		end
+	end	
+end)
 
 
 local function syncGuiColors(objects)
