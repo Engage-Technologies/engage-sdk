@@ -188,6 +188,30 @@ local function buildQuestionFrame()
 		zoneLabel.Size = UDim2.new(0.2, 0, 1, 0)
 		zoneLabel.Text = "Zone"
 		zoneLabel.TextScaled = true
+		
+		local function adjustSurfaceGuiZone(oldZone, newZone)
+			local selection = Selection:Get()
+			local oldTag = "QuestionZone" .. tostring(oldZone)
+			print("Incrementing zone numbers for selection")
+			for i, selected in ipairs(selection) do
+				if CollectionService:HasTag(selected, oldTag) then
+					CollectionService:RemoveTag(selected, oldTag)
+					CollectionService:AddTag(selected, "QuestionZone" .. tostring(newZone))
+
+					-- we need to refresh the text of any objects
+					local surfaceGUI = selected:FindFirstChildWhichIsA("SurfaceGui")
+					if surfaceGUI then
+						for i, child in pairs(surfaceGUI:GetDescendants()) do
+							print(child)
+							if child:isA("TextLabel") then
+								local newText, replaced = child.Text:gsub("z" ..tostring(oldZone), "z"..tostring(newZone))
+								child.Text = newText
+							end
+						end
+					end
+				end
+			end
+		end
 
 		zoneBox = Instance.new("TextBox", zoneFrame)
 		zoneBox.AnchorPoint = Vector2.new(0.5 ,0)
@@ -197,6 +221,7 @@ local function buildQuestionFrame()
 		zoneBox.Text = tostring(getMaxZoneNumber())
 		zoneBox.PlaceholderText = "#"
 		zoneBox.TextScaled = true
+		-- TODO callback on changing the zone number..
 
 		local upZoneButton = Instance.new("ImageButton", zoneFrame)
 		upZoneButton.AnchorPoint = Vector2.new(0.5, 0)
@@ -208,12 +233,13 @@ local function buildQuestionFrame()
 		upZoneButton.MouseButton1Click:Connect(function()
 			-- Get the new zone number
 			-- Check if it's less than the maxZoneNumber and increment
+			local oldZoneNum = getCurrentZoneNumber()
 			local newZoneNum = getCurrentZoneNumber() + 1
 			if newZoneNum > getMaxZoneNumber() then
 				incrementMaxZoneNumber()
 			end
 			setCurrentZoneNumber(newZoneNum)
-			-- TODO check if we have an object selected and change all of the selected Object's engageZone numbers
+			adjustSurfaceGuiZone(oldZoneNum, newZoneNum)
 		end)
 
 		local downZoneButton = Instance.new("ImageButton", zoneFrame)
@@ -225,9 +251,10 @@ local function buildQuestionFrame()
 		downZoneButton.Image = "rbxassetid://29563813"
 		
 		downZoneButton.MouseButton1Click:Connect(function()
+			local oldZoneNum = getCurrentZoneNumber()
 			local newZoneNum = math.max( getCurrentZoneNumber() - 1, 1)
 			setCurrentZoneNumber(newZoneNum)
-			-- TODO same check about object selected and incrementing
+			adjustSurfaceGuiZone(oldZoneNum, newZoneNum)
 		end)
 
 		--local newZoneButton = Instance.new("ImageButton", zoneFrame)
@@ -379,10 +406,10 @@ local function buildQuestionFrame()
 			textLabel.BackgroundTransparency = 1
 			return componentFrame
 		end
-		
+
 		local function handleNewComponent(component, onlyAdd)
 			onlyAdd = onlyAdd or false
-			
+
 			-- Check correct selection
 			local selection = Selection:Get()
 			if #selection > 1 then
@@ -390,13 +417,13 @@ local function buildQuestionFrame()
 				return
 			end
 			local componentObj = selection[1]
-			
+
 			-- Check we have tagged this object
 			local tagName = "QuestionZone" .. tostring(getCurrentZoneNumber())
 			if not CollectionService:HasTag(componentObj, tagName) then
 				CollectionService:AddTag(componentObj, tagName)
 			end
-			
+
 			-- Check if we have a surface GUI
 			local surfaceGUI = componentObj:FindFirstChildWhichIsA("SurfaceGui")
 			if not surfaceGUI then
@@ -405,9 +432,9 @@ local function buildQuestionFrame()
 				setVisibleFrame("surface")
 			end
 			surfaceEditObject = surfaceGUI
-			
+
 			local zoneComponents = engageSDK.findZoneComponents(getCurrentZoneNumber(), {"question", "option"})
-			
+
 			-- All components on our surface
 			local allComponents = {}
 			for key, value in pairs(zoneComponents) do
@@ -415,7 +442,7 @@ local function buildQuestionFrame()
 					allComponents[key] = value
 				end
 			end
-			
+
 			-- Check if component is already present to remove it
 			if allComponents[component:lower()] and not onlyAdd then
 				allComponents[component:lower()]:Destroy()
@@ -425,12 +452,12 @@ local function buildQuestionFrame()
 			else
 				allComponents[component:lower()] = createNewFrame(surfaceGUI, component)
 			end
-			
+
 			local numComponents = 0
 			for key, value in pairs(allComponents) do
 				numComponents += 1
 			end
-			
+
 			local optionsHeight = 1.0
 			local numOptions = numComponents
 			if allComponents["question"] ~= nil and numComponents > 1 then
@@ -441,7 +468,7 @@ local function buildQuestionFrame()
 				-- Just a question
 				allComponents["question"].Size = UDim2.new(1,0,1,0)
 			end
-			
+
 			local count = 0
 			local sizeIncrement = 1 / numOptions
 			for i, option in ipairs({"option1", "option2", "option3"}) do
@@ -451,7 +478,7 @@ local function buildQuestionFrame()
 					count += 1
 				end
 			end
-			
+
 			-- Update button colors
 			--redrawButtons()
 		end
@@ -477,8 +504,6 @@ local function buildQuestionFrame()
 				componentObj:SetAttribute("EngageType", responseType)
 			end
 		end
-
-		
 		
 		-- Callbacks
 		questionButton.MouseButton1Click:Connect(function()			
