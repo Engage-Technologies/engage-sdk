@@ -42,6 +42,7 @@ local backendScript
 -- Question Zone attributes
 local zoneBox
 local surfaceEditObject
+local previousZoneNumber -- used by when modifying the textbox number
 
 local function findMissingFiles()
 	-- Check the EngageSDK and EngageBackendScript have been installed
@@ -93,6 +94,7 @@ end
 
 local function setCurrentZoneNumber(zoneNumber)
 	zoneBox.Text = tostring(zoneNumber)
+	previousZoneNumber = zoneNumber
 end
 
 local function getMaxZoneNumber()
@@ -104,6 +106,7 @@ local function incrementMaxZoneNumber()
 	local newNumZones = numZones + 1
 	backendScript:SetAttribute("EngageZones", newNumZones)
 	setCurrentZoneNumber(newNumZones)
+	return newNumZones
 end
 
 local function buildApiKeyFrame()
@@ -142,7 +145,6 @@ local function buildApiKeyFrame()
 	apiKeyBox.Text = "API Key"
 
 	local function onConnect()
-		print("Connecting!")
 		local code = apiKeyBox.Text
 
 		-- Attempt to connect to backend
@@ -158,7 +160,6 @@ local function buildApiKeyFrame()
 		if enterPressed then
 			onConnect()
 		else
-			--print("Focus lost but enter wasn't pressed")
 			if apiKeyBox.Text == "" then
 				apiKeyBox.Text = "API Key"
 			end
@@ -192,7 +193,6 @@ local function buildQuestionFrame()
 		local function adjustSurfaceGuiZone(oldZone, newZone)
 			local selection = Selection:Get()
 			local oldTag = "QuestionZone" .. tostring(oldZone)
-			print("Incrementing zone numbers for selection")
 			for i, selected in ipairs(selection) do
 				if CollectionService:HasTag(selected, oldTag) then
 					CollectionService:RemoveTag(selected, oldTag)
@@ -202,7 +202,6 @@ local function buildQuestionFrame()
 					local surfaceGUI = selected:FindFirstChildWhichIsA("SurfaceGui")
 					if surfaceGUI then
 						for i, child in pairs(surfaceGUI:GetDescendants()) do
-							print(child)
 							if child:isA("TextLabel") then
 								local newText, replaced = child.Text:gsub("z" ..tostring(oldZone), "z"..tostring(newZone))
 								child.Text = newText
@@ -222,6 +221,25 @@ local function buildQuestionFrame()
 		zoneBox.PlaceholderText = "#"
 		zoneBox.TextScaled = true
 		-- TODO callback on changing the zone number..
+		zoneBox.FocusLost:Connect(function(enterPressed)
+			
+			local newNum
+			local success, errorMsg = pcall(function()
+				newNum = tonumber(zoneBox.Text)
+			end)
+			
+			if newNum > getMaxZoneNumber() then
+				newNum = incrementMaxZoneNumber()
+			end
+			
+			if newNum then
+				adjustSurfaceGuiZone(previousZoneNumber, newNum)
+			else
+				setCurrentZoneNumber(newNum)
+				print("[ERROR] Unable to convert input to a number")
+			end
+			
+		end)
 
 		local upZoneButton = Instance.new("ImageButton", zoneFrame)
 		upZoneButton.AnchorPoint = Vector2.new(0.5, 0)
