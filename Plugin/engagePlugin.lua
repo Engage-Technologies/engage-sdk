@@ -1,5 +1,6 @@
 -- Create a new toolbar section titled "Custom Script Tools"
 local Selection = game:GetService("Selection")
+local CollectionService = game:GetService("CollectionService")
 
 local toolbar = plugin:CreateToolbar("Learn 1.0.0")
 
@@ -34,10 +35,26 @@ local installFrame = Instance.new("Frame", learnWidget)
 local surfacePlacementFrame = Instance.new("Frame", learnWidget)
 
 local ServerScriptService = game:GetService("ServerScriptService")
+local ServerStorage = game:GetService("ServerStorage")
+local engageSDK
 local backendScript
 
 -- Question Zone attributes
 local zoneBox
+local surfaceEditObject
+
+local function findMissingFiles()
+	-- Check the EngageSDK and EngageBackendScript have been installed
+	backendScript = ServerScriptService:FindFirstChild("EngageBackendScript")
+	if not backendScript then
+		return "ServerScriptService/EngageBackendScript"
+	end
+	local ServerStorage = game:GetService("ServerStorage")
+	if not ServerStorage:FindFirstChild("EngageSDK") then
+		return "ServerStorage/EngageSDK"
+	end
+	return nil
+end
 
 local function setVisibleFrame(frame)
 	apiKeyFrame.Visible = false
@@ -56,18 +73,37 @@ local function setVisibleFrame(frame)
 	end
 end
 
+local function decideAvailableFrames()
+	-- Decides which frames are available to run next
+	
+	-- Get the Engage API Code
+	if not apiKeyFrame then
+		setVisibleFrame("api")
+	elseif findMissingFiles() then	
+		setVisibleFrame("install")
+	else
+		engageSDK = require( ServerStorage.EngageSDK.EngageSDKModule )
+		setVisibleFrame("question")
+	end
+end
+
+local function getCurrentZoneNumber()
+	return tonumber(zoneBox.Text)
+end
+
+local function setCurrentZoneNumber(zoneNumber)
+	zoneBox.Text = tostring(zoneNumber)
+end
+
 local function getMaxZoneNumber()
 	return backendScript:GetAttribute("EngageZones")
 end
 
-local function incrementMaxZoneNumber()
-	
-	-- We must have an object selected & we'll mark it with the zone number
-	
+local function incrementMaxZoneNumber()	
 	local numZones = getMaxZoneNumber()
 	local newNumZones = numZones + 1
 	backendScript:SetAttribute("EngageZones", newNumZones)
-	zoneBox.Text = tostring(newNumZones)
+	setCurrentZoneNumber(newNumZones)
 end
 
 local function buildApiKeyFrame()
@@ -114,8 +150,7 @@ local function buildApiKeyFrame()
 			print("Connecting with " .. code)
 			apiKey = code
 			Plugin:SetSetting("apiKey", apiKey)
-			apiKeyFrame.Visible = false
-			questionFrame.Visible = true
+			decideAvailableFrames()
 		end
 	end
 
@@ -173,11 +208,11 @@ local function buildQuestionFrame()
 		upZoneButton.MouseButton1Click:Connect(function()
 			-- Get the new zone number
 			-- Check if it's less than the maxZoneNumber and increment
-			local newZoneNum = tonumber(zoneBox.Text) + 1
+			local newZoneNum = getCurrentZoneNumber() + 1
 			if newZoneNum > getMaxZoneNumber() then
 				incrementMaxZoneNumber()
 			end
-			zoneBox.Text = tostring(newZoneNum)
+			setCurrentZoneNumber(newZoneNum)
 			-- TODO check if we have an object selected and change all of the selected Object's engageZone numbers
 		end)
 
@@ -190,8 +225,8 @@ local function buildQuestionFrame()
 		downZoneButton.Image = "rbxassetid://29563813"
 		
 		downZoneButton.MouseButton1Click:Connect(function()
-			local newZoneNum = math.max( tonumber(zoneBox.Text) - 1, 1)
-			zoneBox.Text = tostring(newZoneNum)
+			local newZoneNum = math.max( getCurrentZoneNumber() - 1, 1)
+			setCurrentZoneNumber(newZoneNum)
 			-- TODO same check about object selected and incrementing
 		end)
 
@@ -227,37 +262,132 @@ local function buildQuestionFrame()
 		uiGridLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 		uiGridLayout.VerticalAlignment = Enum.VerticalAlignment.Center
 		uiGridLayout.SortOrder = Enum.SortOrder.LayoutOrder
+		
+		local function createNewFrame(parent, componentType)
+			local componentFrame = Instance.new("Frame", parent)
+			componentFrame:SetAttribute("EngageType", componentType:lower())
+			componentFrame.Size = UDim2.new(1,0,1,0)
+			componentFrame.Name = componentType .. "Frame"
+			componentFrame.BackgroundTransparency = 1
+			local imageLabel = Instance.new("ImageLabel", componentFrame)
+			imageLabel.Size = UDim2.new(1,0,1,0)
+			imageLabel.ScaleType = Enum.ScaleType.Stretch
+			imageLabel.Visible = false
+			imageLabel.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+			imageLabel.BackgroundTransparency = 1
+			local textLabel = Instance.new("TextLabel", componentFrame)
+			textLabel.Size = UDim2.new(1,0,1,0)
+			textLabel.TextScaled = true
+			textLabel.Text = "z" .. tostring(getCurrentZoneNumber()) .. " " .. componentType:gsub("Option", "o")
+			textLabel.Visible = true
+			textLabel.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+			textLabel.BackgroundTransparency = 1
+			return componentFrame
+		end
+		
+		local function handleNewComponent(component)
+			-- Check correct selection
+			local selection = Selection:Get()
+			if #selection > 1 then
+				print("[ERROR] Only select one object to place the question/option on.")
+				return
+			end
+			local componentObj = selection[1]
+			
+			-- Check we have tagged this object
+			local tagName = "QuestionZone" .. tostring(getCurrentZoneNumber())
+			if not CollectionService:HasTag(componentObj, tagName) then
+				CollectionService:AddTag(componentObj, tagName)
+			end
+			
+			-- Check if we have a surface GUI
+			local surfaceGUI = componentObj:FindFirstChildWhichIsA("SurfaceGui")
+			if not surfaceGUI then
+				print("Adding surface placement")
+				surfaceGUI = Instance.new("SurfaceGui", componentObj)
+				surfaceGUI.SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud
+				setVisibleFrame("surface")
+			end
+			surfaceEditObject = surfaceGUI
+			
+			local zoneComponents = engageSDK.findZoneComponents(getCurrentZoneNumber(), {"question", "option"})
+			
+			-- All components on our surface
+			local allComponents = {}
+			for key, value in pairs(zoneComponents) do
+				if value.Parent == componentObj then
+					allComponents[key] = value
+				end
+			end
+			
+			-- Check if component is already present to remove it
+			if allComponents[component:lower()] then
+				allComponents[component:lower()]:Destroy()
+				allComponents[component:lower()] = nil
+			else
+				allComponents[component:lower()] = createNewFrame(surfaceGUI, component)
+			end
+			
+			local numComponents = 0
+			for key, value in pairs(allComponents) do
+				numComponents += 1
+				print(key)
+			end
+			
+			print("Num components: " .. tostring(numComponents))
+			
+			local optionsHeight = 1.0
+			local numOptions = numComponents
+			if allComponents["question"] ~= nil and numComponents > 1 then
+				print("Question and option")
+				optionsHeight = 0.5
+				numOptions = numComponents - 1
+				allComponents["question"].Size = UDim2.new(1,0,0.5,0)
+			elseif allComponents["question"] then
+				-- Just a question
+				allComponents["question"].Size = UDim2.new(1,0,1,0)
+			end
+			
+			local count = 0
+			local sizeIncrement = 1 / numOptions
+			for i, option in ipairs({"option1", "option2", "option3"}) do
+				if allComponents[option] then
+					print("Placing " .. option)
+					allComponents[option].Size = UDim2.new(sizeIncrement, 0, optionsHeight, 0)
+					allComponents[option].Position = UDim2.new(sizeIncrement * count, 0, 1 - optionsHeight, 0)
+					count += 1
+				end
+			end
+			
+		end
 
 		local questionButton = Instance.new("TextButton", optionsFrame)
 		questionButton.Text = "Question"
 		questionButton.TextScaled = true
-		questionButton.MouseButton1Click:Connect(function()
-			local selection = Selection:Get()
-			if #selection > 1 then
-				print("[ERROR] Only select one object to place the question on.")
-				return
-			end
-			
-			local questionObj = selection[1]
-			
-			local surfaceGUI = questionObj:FindFirstChildWhichIsA("SurfaceGui")
-			if not surfaceGUI then
-				surfaceGUI = Instance.new("SurfaceGui", questionObj)
-				
-			end
+		questionButton.MouseButton1Click:Connect(function()			
+			handleNewComponent("Question")
 		end)
 
 		local option1Button = Instance.new("TextButton", optionsFrame)
 		option1Button.Text = "Option 1"
 		option1Button.TextScaled = true
+		option1Button.MouseButton1Click:Connect(function()
+			handleNewComponent("Option1")
+		end)
 
 		local option2Button = Instance.new("TextButton", optionsFrame)
 		option2Button.Text = "Option 2"
 		option2Button.TextScaled = true
+		option2Button.MouseButton1Click:Connect(function()
+			handleNewComponent("Option2")
+		end)
 
 		local option3Button = Instance.new("TextButton", optionsFrame)
 		option3Button.Text = "Option 3"
 		option3Button.TextScaled = true
+		option3Button.MouseButton1Click:Connect(function()
+			handleNewComponent("Option3")
+		end)
 
 		local allButton = Instance.new("TextButton", optionsFrame)
 		allButton.Text = "All"
@@ -282,19 +412,6 @@ local function buildQuestionFrame()
 	end
 	buildOptionsFrame()
 
-end
-
-local function findMissingFiles()
-	-- Check the EngageSDK and EngageBackendScript have been installed
-	backendScript = ServerScriptService:FindFirstChild("EngageBackendScript")
-	if not backendScript then
-		return "ServerScriptService/EngageBackendScript"
-	end
-	local ServerStorage = game:GetService("ServerStorage")
-	if not ServerStorage:FindFirstChild("EngageSDK") then
-		return "ServerStorage/EngageSDK"
-	end
-	return nil
 end
 
 local function buildInstallFrame()
@@ -384,32 +501,50 @@ local function buildSurfacePlacementFrame()
 		uiGridLayout.VerticalAlignment = Enum.VerticalAlignment.Center
 		
 		local function surfaceSideCallback(surfaceSide)
-			
+			surfaceEditObject.Face = surfaceSide
 		end
 		
 		local backButton = Instance.new("TextButton", frame)
 		backButton.Text = "Back"
 		backButton.TextScaled = true
+		backButton.MouseButton1Click:Connect(function()
+			surfaceSideCallback(Enum.NormalId.Back)
+		end)
 		
 		local bottomButton = Instance.new("TextButton", frame)
 		bottomButton.Text = "Bottom"
 		bottomButton.TextScaled = true
+		bottomButton.MouseButton1Click:Connect(function()
+			surfaceSideCallback(Enum.NormalId.Bottom)
+		end)
 		
 		local frontButton = Instance.new("TextButton", frame)
 		frontButton.Text = "Front"
 		frontButton.TextScaled = true
+		frontButton.MouseButton1Click:Connect(function()
+			surfaceSideCallback(Enum.NormalId.Front)
+		end)
 		
 		local leftButton = Instance.new("TextButton", frame)
 		leftButton.Text = "Left"
 		leftButton.TextScaled = true
+		leftButton.MouseButton1Click:Connect(function()
+			surfaceSideCallback(Enum.NormalId.Left)
+		end)
 		
 		local rightButton = Instance.new("TextButton", frame)
 		rightButton.Text = "Right"
 		rightButton.TextScaled = true
+		rightButton.MouseButton1Click:Connect(function()
+			surfaceSideCallback(Enum.NormalId.Right)
+		end)
 		
 		local topButton = Instance.new("TextButton", frame)
-		topButton.Text = "Topp"
+		topButton.Text = "Top"
 		topButton.TextScaled = true
+		topButton.MouseButton1Click:Connect(function()
+			surfaceSideCallback(Enum.NormalId.Top)
+		end)
 	end
 	buildFrame()
 	
@@ -418,6 +553,9 @@ local function buildSurfacePlacementFrame()
 	doneButton.Size = UDim2.new(1,0,0.2,0)
 	doneButton.Text = "Done"
 	doneButton.TextScaled = true
+	doneButton.MouseButton1Click:Connect(function()
+		setVisibleFrame("question")
+	end)
 	
 end
 
@@ -449,18 +587,9 @@ end
 
 buildApiKeyFrame()
 buildInstallFrame()
+buildSurfacePlacementFrame()
 buildQuestionFrame()
 
--- Get the Engage API Code
-if not apiKeyFrame then
-	setVisibleFrame("api")
-
--- Check that the module has been installed
-elseif findMissingFiles() then	
-	setVisibleFrame("install")
--- Everything is ready to go
-else
-	setVisibleFrame("question")
-end
+decideAvailableFrames()
 
 syncGuiColors(learnWidget:GetDescendants())
