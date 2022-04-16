@@ -45,6 +45,7 @@ local backendScript
 local zoneBox
 local surfaceEditObject
 local previousZoneNumber -- used by when modifying the textbox number
+local visibleFrame
 
 local function findMissingFiles()
 	-- Check the EngageSDK and EngageBackendScript have been installed
@@ -64,21 +65,25 @@ local function setVisibleFrame(frame)
 	questionFrame.Visible = false
 	installFrame.Visible = false
 	surfacePlacementFrame.Visible = false
-	
+
 	if frame == "api" then
 		apiKeyFrame.Visible = true
+		visibleFrame = "api"
 	elseif frame == "question" then
 		questionFrame.Visible = true
+		visibleFrame = "question"
 	elseif frame == "surface" then
 		surfacePlacementFrame.Visible = true
+		visibleFrame = "surface"
 	else
 		installFrame.Visible = true
+		visibleFrame = "install"
 	end
 end
 
 local function decideAvailableFrames()
 	-- Decides which frames are available to run next
-	
+
 	-- Get the Engage API Code
 	if not apiKeyFrame then
 		setVisibleFrame("api")
@@ -88,7 +93,7 @@ local function decideAvailableFrames()
 		-- Set the API key to the API Wrapper
 		local apiWrapper = ServerStorage.EngageSDK.EngageAPIWrapper
 		apiWrapper:SetAttribute("apiKey", apiKey) -- subpar way to store the API Key
-		
+
 		-- Load the SDK & Transition to Question Frame
 		engageSDK = require( ServerStorage.EngageSDK.EngageSDKModule )
 		setVisibleFrame("question")
@@ -196,7 +201,7 @@ local function buildQuestionFrame()
 		zoneLabel.Size = UDim2.new(0.2, 0, 1, 0)
 		zoneLabel.Text = "Zone"
 		zoneLabel.TextScaled = true
-		
+
 		local function adjustSurfaceGuiZone(oldZone, newZone)
 			local selection = Selection:Get()
 			local oldTag = "QuestionZone" .. tostring(oldZone)
@@ -229,23 +234,23 @@ local function buildQuestionFrame()
 		zoneBox.TextScaled = true
 		-- TODO callback on changing the zone number..
 		zoneBox.FocusLost:Connect(function(enterPressed)
-			
+
 			local newNum
 			local success, errorMsg = pcall(function()
 				newNum = tonumber(zoneBox.Text)
 			end)
-			
+
 			if newNum > getMaxZoneNumber() then
 				newNum = incrementMaxZoneNumber()
 			end
-			
+
 			if newNum then
 				adjustSurfaceGuiZone(previousZoneNumber, newNum)
 			else
 				setCurrentZoneNumber(newNum)
 				print("[ERROR] Unable to convert input to a number")
 			end
-			
+
 		end)
 
 		local upZoneButton = Instance.new("ImageButton", zoneFrame)
@@ -254,7 +259,7 @@ local function buildQuestionFrame()
 		upZoneButton.Position = UDim2.new(0.55, 0, 0, 0)
 		upZoneButton.Size = UDim2.new(0.15, 0, 0.5, 0)
 		upZoneButton.Image = "rbxassetid://29563813"
-		
+
 		upZoneButton.MouseButton1Click:Connect(function()
 			-- Get the new zone number
 			-- Check if it's less than the maxZoneNumber and increment
@@ -274,7 +279,7 @@ local function buildQuestionFrame()
 		downZoneButton.Rotation = 180
 		downZoneButton.Size = UDim2.new(0.15, 0, 0.5, 0)
 		downZoneButton.Image = "rbxassetid://29563813"
-		
+
 		downZoneButton.MouseButton1Click:Connect(function()
 			local oldZoneNum = getCurrentZoneNumber()
 			local newZoneNum = math.max( getCurrentZoneNumber() - 1, 1)
@@ -293,7 +298,7 @@ local function buildQuestionFrame()
 			local missing = false
 			for i = 1, getMaxZoneNumber() do
 				local missingComponents = {}
-				
+
 				local components = engageSDK.findZoneComponents(i, {"question", "response", "option"})
 				if not components["question"] then
 					table.insert(missingComponents, "question")
@@ -316,7 +321,7 @@ local function buildQuestionFrame()
 				if not components["response3"] then
 					table.insert(missingComponents, "response3")
 				end
-				
+
 				if #missingComponents > 0 then
 					print("Zone " .. i .. " missing: " .. table.concat(missingComponents, ', ') )
 					missing = true
@@ -343,7 +348,7 @@ local function buildQuestionFrame()
 		uiGridLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 		uiGridLayout.VerticalAlignment = Enum.VerticalAlignment.Center
 		uiGridLayout.SortOrder = Enum.SortOrder.LayoutOrder
-		
+
 		local questionButton = Instance.new("TextButton", optionsFrame)
 		questionButton.Text = "Question"
 		questionButton.TextScaled = true
@@ -379,55 +384,55 @@ local function buildQuestionFrame()
 		local response3Button = Instance.new("TextButton", optionsFrame)
 		response3Button.Text = "Response 3"
 		response3Button.TextScaled = true
-		
+
 		--local function redrawButtons()
 		--	local zoneComponents = engageSDK.findZoneComponents(getCurrentZoneNumber(), {"question", "option","response"})
-			
+
 		--	local alreadyPlacedColor = Color3.fromRGB(0, 0, 0)
 		--	local notPlacedColor = settings().Studio.Theme:GetColor(Enum.StudioStyleGuideColor.MainBackground)
-			
+
 		--	-- Question Button
 		--	if zoneComponents["question"] then
 		--		questionButton.BackgroundColor3 = alreadyPlacedColor
 		--	else
 		--		questionButton.BackgroundColor3 = notPlacedColor
 		--	end
-			
+
 		--	-- Option1 Button
 		--	if zoneComponents["option1"] then
 		--		option1Button.BackgroundColor3 = alreadyPlacedColor
 		--	else
 		--		option1Button.BackgroundColor3 = notPlacedColor
 		--	end
-			
+
 		--	-- Option2 Button
 		--	if zoneComponents["option2"] then
 		--		option2Button.BackgroundColor3 = alreadyPlacedColor
 		--	else
 		--		option2Button.BackgroundColor3 = notPlacedColor
 		--	end
-			
+
 		--	-- Option3 Button
 		--	if zoneComponents["option3"] then
 		--		option3Button.BackgroundColor3 = alreadyPlacedColor
 		--	else
 		--		option3Button.BackgroundColor3 = notPlacedColor
 		--	end
-			
+
 		--	-- Response1 Button
 		--	if zoneComponents["response1"] then
 		--		response1Button.BackgroundColor3 = alreadyPlacedColor
 		--	else
 		--		response1Button.BackgroundColor3 = notPlacedColor
 		--	end
-			
+
 		--	-- Response2 Button
 		--	if zoneComponents["response2"] then
 		--		response2Button.BackgroundColor3 = alreadyPlacedColor
 		--	else
 		--		response2Button.BackgroundColor3 = notPlacedColor
 		--	end
-			
+
 		--	-- Response3 Button
 		--	if zoneComponents["response3"] then
 		--		response3Button.BackgroundColor3 = alreadyPlacedColor
@@ -436,7 +441,7 @@ local function buildQuestionFrame()
 		--	end
 		--end
 		--redrawButtons()
-		
+
 		local function createNewFrame(parent, componentType)
 			local componentFrame = Instance.new("Frame", parent)
 			componentFrame:SetAttribute("EngageType", componentType:lower())
@@ -498,6 +503,11 @@ local function buildQuestionFrame()
 			end
 
 			-- Check if component is already present to remove it
+			if not allComponents[component:lower()] and zoneComponents[component:lower()] then
+				print("[ERROR] Zone " .. tostring(getCurrentZoneNumber()) .. " " .. component .. " already placed.")
+				return
+			end
+			
 			if allComponents[component:lower()] and not onlyAdd then
 				allComponents[component:lower()]:Destroy()
 				allComponents[component:lower()] = nil
@@ -536,7 +546,7 @@ local function buildQuestionFrame()
 			-- Update button colors
 			--redrawButtons()
 		end
-		
+
 		local function addResponse(responseType)
 			-- Check correct selection
 			local selection = Selection:Get()
@@ -551,14 +561,14 @@ local function buildQuestionFrame()
 			if not CollectionService:HasTag(componentObj, tagName) then
 				CollectionService:AddTag(componentObj, tagName)
 			end
-			
+
 			if componentObj:GetAttribute("EngageType") ~= nil then
 				componentObj:SetAttribute("EngageType", nil)
 			else
 				componentObj:SetAttribute("EngageType", responseType)
 			end
 		end
-		
+
 		-- Callbacks
 		questionButton.MouseButton1Click:Connect(function()			
 			handleNewComponent("Question")
@@ -596,13 +606,13 @@ end
 local function buildInstallFrame()
 	installFrame.BorderSizePixel = 0
 	installFrame.Size = UDim2.new(1,0,1,0)
-	
+
 	local line1Label = Instance.new("TextLabel", installFrame)
 	line1Label.BorderSizePixel = 0
 	line1Label.Size = UDim2.new(1,0,0.2,0)
 	line1Label.Text = "Missing Installation File(s):"
 	line1Label.TextScaled = true
-	
+
 	local missingFilesLabel = Instance.new("TextLabel", installFrame)
 	missingFilesLabel.BorderSizePixel = 0
 	missingFilesLabel.Position = UDim2.new(0,0,0.25,0)
@@ -612,14 +622,14 @@ local function buildInstallFrame()
 		missingFilesLabel.Text = "'" .. missingFiles .. "'"
 	end
 	missingFilesLabel.TextScaled = true
-	
+
 	local line2Label = Instance.new("TextLabel", installFrame)
 	line2Label.BorderSizePixel = 0
 	line2Label.Size = UDim2.new(1,0,0.1,0)
 	line2Label.Position = UDim2.new(0,0,0.4,0)
 	line2Label.Text = "Please go to"
 	line2Label.TextScaled = true
-	
+
 	local githubBox = Instance.new("TextBox", installFrame)
 	githubBox.BorderSizePixel = 0
 	githubBox.Position = UDim2.new(0,0,0.5,0)
@@ -629,14 +639,14 @@ local function buildInstallFrame()
 	githubBox.TextEditable = false
 	githubBox.Selectable = true
 	githubBox.ClearTextOnFocus = false
-	
+
 	local line3Label = Instance.new("TextLabel", installFrame)
 	line3Label.BorderSizePixel = 0
 	line3Label.Position = UDim2.new(0, 0, 0.6, 0)
 	line3Label.Size = UDim2.new(1,0,0.1,0)
 	line3Label.Text = "for installation instructions."
 	line3Label.TextScaled = true
-	
+
 	local updateButton = Instance.new("TextButton", installFrame)
 	updateButton.AnchorPoint = Vector2.new(0.5,0)
 	updateButton.BorderSizePixel = 1
@@ -645,9 +655,9 @@ local function buildInstallFrame()
 	updateButton.Size = UDim2.new(0.5, 0, 0.2, 0)
 	updateButton.Text = "Recheck Install"
 	updateButton.TextScaled = true
-	
+
 	updateButton.MouseButton1Click:Connect(function()
-		
+
 		local missingFile = findMissingFiles()
 		if missingFile then
 			missingFilesLabel.Text = "'" .. missingFile .. "'"
@@ -655,22 +665,22 @@ local function buildInstallFrame()
 			setVisibleFrame("question")
 		end
 	end)
-	
+
 end
 
 local function buildSurfacePlacementFrame()
 	surfacePlacementFrame.BorderSizePixel = 0
 	surfacePlacementFrame.Size = UDim2.new(1,0,1,0)
-	
+
 	local bannerLabel = Instance.new("TextLabel", surfacePlacementFrame)
 	bannerLabel.Size = UDim2.new(1,0,0.2,0)
 	bannerLabel.Text = "Select Surface Side"
 	bannerLabel.TextScaled = true
-	
+
 	local frame = Instance.new("Frame", surfacePlacementFrame)
 	frame.Position = UDim2.new(0,0,0.2,0)
 	frame.Size = UDim2.new(1,0,0.6, 0)
-	
+
 	local function buildFrame()
 		local uiGridLayout = Instance.new("UIGridLayout", frame)
 		uiGridLayout.CellPadding = UDim2.new(0.03, 0, 0.05, 0)
@@ -678,46 +688,46 @@ local function buildSurfacePlacementFrame()
 		uiGridLayout.FillDirection = Enum.FillDirection.Horizontal
 		uiGridLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 		uiGridLayout.VerticalAlignment = Enum.VerticalAlignment.Center
-		
+
 		local function surfaceSideCallback(surfaceSide)
 			surfaceEditObject.Face = surfaceSide
 		end
-		
+
 		local backButton = Instance.new("TextButton", frame)
 		backButton.Text = "Back"
 		backButton.TextScaled = true
 		backButton.MouseButton1Click:Connect(function()
 			surfaceSideCallback(Enum.NormalId.Back)
 		end)
-		
+
 		local bottomButton = Instance.new("TextButton", frame)
 		bottomButton.Text = "Bottom"
 		bottomButton.TextScaled = true
 		bottomButton.MouseButton1Click:Connect(function()
 			surfaceSideCallback(Enum.NormalId.Bottom)
 		end)
-		
+
 		local frontButton = Instance.new("TextButton", frame)
 		frontButton.Text = "Front"
 		frontButton.TextScaled = true
 		frontButton.MouseButton1Click:Connect(function()
 			surfaceSideCallback(Enum.NormalId.Front)
 		end)
-		
+
 		local leftButton = Instance.new("TextButton", frame)
 		leftButton.Text = "Left"
 		leftButton.TextScaled = true
 		leftButton.MouseButton1Click:Connect(function()
 			surfaceSideCallback(Enum.NormalId.Left)
 		end)
-		
+
 		local rightButton = Instance.new("TextButton", frame)
 		rightButton.Text = "Right"
 		rightButton.TextScaled = true
 		rightButton.MouseButton1Click:Connect(function()
 			surfaceSideCallback(Enum.NormalId.Right)
 		end)
-		
+
 		local topButton = Instance.new("TextButton", frame)
 		topButton.Text = "Top"
 		topButton.TextScaled = true
@@ -726,7 +736,7 @@ local function buildSurfacePlacementFrame()
 		end)
 	end
 	buildFrame()
-	
+
 	local doneButton = Instance.new("TextButton", surfacePlacementFrame)
 	doneButton.Position = UDim2.new(0,0,0.8,0)
 	doneButton.Size = UDim2.new(1,0,0.2,0)
@@ -735,24 +745,28 @@ local function buildSurfacePlacementFrame()
 	doneButton.MouseButton1Click:Connect(function()
 		setVisibleFrame("question")
 	end)
-	
+
 end
 
 Selection.SelectionChanged:Connect(function()
 	
+	if visibleFrame == "surface" then
+		setVisibleFrame("question")
+	end
+	
 	for i, selection in ipairs(Selection:Get()) do
-		
+
 		local tags = CollectionService:GetTags(selection)
-		
+
 		for j, tag in ipairs(tags) do
-			
+
 			if tag:match("QuestionZone") then
-				
+
 				local newZoneNum, replaced = tag:gsub("QuestionZone", "")
 				setCurrentZoneNumber(tonumber(newZoneNum))
 				return
 			end
-			
+
 		end
 	end	
 end)
