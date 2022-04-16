@@ -275,14 +275,6 @@ local function buildQuestionFrame()
 			adjustSurfaceGuiZone(oldZoneNum, newZoneNum)
 		end)
 
-		--local newZoneButton = Instance.new("ImageButton", zoneFrame)
-		--newZoneButton.BorderSizePixel = 0
-		--newZoneButton.AnchorPoint = Vector2.new(0.5, 0.5)
-		--newZoneButton.Position = UDim2.new(0.625, 0, 0.5, 0)
-		--newZoneButton.Size = UDim2.new(0.25, 0, 0.75, 0)
-		--newZoneButton.Image = "rbxassetid://456014731"
-		--newZoneButton.ScaleType = Enum.ScaleType.Fit
-
 		local checkButton = Instance.new("TextButton", zoneFrame)
 		checkButton.AnchorPoint = Vector2.new(0.5, 0)
 		checkButton.BorderSizePixel = 0
@@ -290,6 +282,43 @@ local function buildQuestionFrame()
 		checkButton.Size = UDim2.new(0.25, 0, 1, 0)
 		checkButton.Text = "Check"
 		checkButton.TextScaled = true
+		checkButton.MouseButton1Click:Connect(function()
+			local missing = false
+			for i = 1, getMaxZoneNumber() do
+				local missingComponents = {}
+				
+				local components = engageSDK.findZoneComponents(i, {"question", "response", "option"})
+				if not components["question"] then
+					table.insert(missingComponents, "question")
+				end
+				if not components["option1"] then
+					table.insert(missingComponents, "option1")
+				end
+				if not components["option2"] then
+					table.insert(missingComponents, "option2")
+				end
+				if not components["option3"] then
+					table.insert(missingComponents, "option3")
+				end
+				if not components["response1"] then
+					table.insert(missingComponents, "response1")
+				end
+				if not components["response2"] then
+					table.insert(missingComponents, "response2")
+				end
+				if not components["response3"] then
+					table.insert(missingComponents, "response3")
+				end
+				
+				if #missingComponents > 0 then
+					print("Zone " .. i .. " missing: " .. table.concat(missingComponents, ', ') )
+					missing = true
+				end
+			end
+			if not missing then
+				print("No components missing.")
+			end
+		end)
 	end
 	buildZoneFrame()
 
