@@ -35,6 +35,7 @@ local apiKeyFrame = Instance.new("Frame", TeachWidget)
 local questionFrame = Instance.new("Frame", TeachWidget)
 local installFrame = Instance.new("Frame", TeachWidget)
 local surfacePlacementFrame = Instance.new("Frame", TeachWidget)
+local settingsFrame = Instance.new("Frame", TeachWidget)
 
 local ServerScriptService = game:GetService("ServerScriptService")
 local ServerStorage = game:GetService("ServerStorage")
@@ -65,6 +66,7 @@ local function setVisibleFrame(frame)
 	questionFrame.Visible = false
 	installFrame.Visible = false
 	surfacePlacementFrame.Visible = false
+	settingsFrame.Visible = false
 
 	if frame == "api" then
 		apiKeyFrame.Visible = true
@@ -75,9 +77,29 @@ local function setVisibleFrame(frame)
 	elseif frame == "surface" then
 		surfacePlacementFrame.Visible = true
 		visibleFrame = "surface"
+	elseif frame == "settings" then
+		settingsFrame.Visible = true
+		visibleFrame = "settings"
 	else
 		installFrame.Visible = true
 		visibleFrame = "install"
+	end
+end
+
+local function updateAPIKey(newApiKey)
+	
+	--TODO Check to make sure the API key is valid
+	
+	apiKey = newApiKey
+	Plugin:SetSetting("apiKey", apiKey)
+
+	-- Attempt to update the API Key in the code
+	local success, message = pcall(function()
+		local apiWrapper = ServerStorage.EngageSDK.EngageAPIWrapper
+		apiWrapper:SetAttribute("apiKey", apiKey) -- subpar way to store the API Key
+	end)
+	if not success then
+		print("[ERROR] Unable to update API Key. Add attribute 'apiKey' to EngageSDK/EngageAPIWrapper.lua")
 	end
 end
 
@@ -85,15 +107,11 @@ local function decideAvailableFrames()
 	-- Decides which frames are available to run next
 
 	-- Get the Engage API Code
-	if not apiKeyFrame then
-		setVisibleFrame("api")
-	elseif findMissingFiles() then	
+	if findMissingFiles() then
 		setVisibleFrame("install")
+	elseif not apiKeyFrame then
+		setVisibleFrame("api")
 	else
-		-- Set the API key to the API Wrapper
-		local apiWrapper = ServerStorage.EngageSDK.EngageAPIWrapper
-		apiWrapper:SetAttribute("apiKey", apiKey) -- subpar way to store the API Key
-
 		-- Load the SDK & Transition to Question Frame
 		engageSDK = require( ServerStorage.EngageSDK.EngageSDKModule )
 		setVisibleFrame("question")
@@ -162,8 +180,7 @@ local function buildApiKeyFrame()
 		-- Attempt to connect to backend
 		if code ~= "" then
 			print("Connecting with " .. code)
-			apiKey = code
-			Plugin:SetSetting("apiKey", apiKey)
+			updateAPIKey(code)
 			decideAvailableFrames()
 		end
 	end
@@ -187,6 +204,17 @@ local function buildQuestionFrame()
 	logoLabel.Size = UDim2.new(1, 0, 0.15, 0)
 	logoLabel.Text = "Roblox Teach"
 	logoLabel.TextScaled = true
+	
+	local settingsButton = Instance.new("ImageButton", questionFrame)
+	settingsButton.BorderSizePixel = 0
+	settingsButton.Position = UDim2.new(0.9, 0, 0, 0)
+	settingsButton.Size = UDim2.new(0.1, 0, 0.15, 0)
+	settingsButton.SizeConstraint = Enum.SizeConstraint.RelativeXY
+	settingsButton.Image = "rbxassetid://9017073939"
+	settingsButton.ScaleType = Enum.ScaleType.Fit
+	settingsButton.MouseButton1Click:Connect(function()
+		setVisibleFrame("settings")
+	end)
 
 	local function buildZoneFrame()
 		local zoneFrame = Instance.new("Frame", questionFrame)
@@ -201,6 +229,7 @@ local function buildQuestionFrame()
 		zoneLabel.Size = UDim2.new(0.2, 0, 1, 0)
 		zoneLabel.Text = "Zone"
 		zoneLabel.TextScaled = true
+		
 
 		local function adjustSurfaceGuiZone(oldZone, newZone)
 			local selection = Selection:Get()
@@ -748,6 +777,63 @@ local function buildSurfacePlacementFrame()
 
 end
 
+local function buildSettingsFrame()
+	settingsFrame.Size = UDim2.new(1, 0, 1, 0)
+
+	local logoLabel = Instance.new("TextLabel", settingsFrame)
+	logoLabel.BorderSizePixel = 0
+	logoLabel.Size = UDim2.new(1, 0, 0.15, 0)
+	logoLabel.Text = "Settings"
+	logoLabel.TextScaled = true
+	
+	local backButton = Instance.new("ImageButton", settingsFrame)
+	backButton.BorderSizePixel = 0
+	backButton.Size = UDim2.new(0.1,0,0.15, 0)
+	backButton.SizeConstraint = Enum.SizeConstraint.RelativeXY
+	backButton.ZIndex = 2
+	backButton.Image = "rbxassetid://6807196325"
+	backButton.ScaleType = Enum.ScaleType.Stretch
+	backButton.MouseButton1Click:Connect(function()
+		setVisibleFrame("question")
+	end)
+	
+	local scrollingFrame = Instance.new("ScrollingFrame", settingsFrame)
+	scrollingFrame.Position = UDim2.new(0,0,0.2,0)
+	scrollingFrame.Size = UDim2.new(1,0,0.8,0)
+	
+	local uiListLayout = Instance.new("UIListLayout", scrollingFrame)
+	
+	-- API Settings
+	local function buildAPISettings()
+		local settingsApiFrame = Instance.new("Frame", scrollingFrame)
+		settingsApiFrame.Size = UDim2.new(1,0,0.1,0)
+		
+		local textlabel = Instance.new("TextLabel", settingsApiFrame)
+		textlabel.BorderSizePixel = 0
+		textlabel.Size = UDim2.new(0.5,0,1,0)
+		textlabel.Text = "API Key"
+		textlabel.TextScaled = true
+		
+		local textbox = Instance.new("TextBox", settingsApiFrame)
+		textbox.Position = UDim2.new(0.5,0,0,0)
+		textbox.Size = UDim2.new(0.5, 0, 1, 0)
+		textbox.PlaceholderText = ""
+		textbox.Text = apiKey
+		textbox.TextScaled = true
+		textbox.FocusLost:Connect(function(enterPressed)
+			-- Update the API Key
+			if textbox.Text ~= "" then
+				updateAPIKey(textbox.Text)
+			else
+				textbox.Text = apiKey
+			end
+		end)
+	end
+	buildAPISettings()
+	
+	
+end
+
 Selection.SelectionChanged:Connect(function()
 	
 	if visibleFrame == "surface" then
@@ -775,20 +861,14 @@ end)
 local function syncGuiColors(objects)
 	local function setColors()
 		for _, guiObject in pairs(objects) do
-
-			if guiObject:isA("UIGridLayout") then
-				continue
-			end
-			-- Sync background color
-			guiObject.BackgroundColor3 = settings().Studio.Theme:GetColor(Enum.StudioStyleGuideColor.MainBackground)
-
-			-- Skip objects
-			if guiObject:isA("Frame") or guiObject:isA("ImageButton") then
-				continue
-			end
-			-- Sync text color
-			guiObject.TextColor3 = settings().Studio.Theme:GetColor(Enum.StudioStyleGuideColor.MainText)
-			guiObject.BorderColor3 = settings().Studio.Theme:GetColor(Enum.StudioStyleGuideColor.MainText)
+			
+			-- Attempt to sync text color
+			local _, _ = pcall(function()
+				guiObject.BackgroundColor3 = settings().Studio.Theme:GetColor(Enum.StudioStyleGuideColor.MainBackground)
+				guiObject.TextColor3 = settings().Studio.Theme:GetColor(Enum.StudioStyleGuideColor.MainText)
+				guiObject.BorderColor3 = settings().Studio.Theme:GetColor(Enum.StudioStyleGuideColor.MainText)
+			end)
+			
 		end
 	end
 	-- Run 'setColors()' function to initially sync colors
@@ -801,6 +881,7 @@ buildApiKeyFrame()
 buildInstallFrame()
 buildSurfacePlacementFrame()
 buildQuestionFrame()
+buildSettingsFrame()
 
 decideAvailableFrames()
 
