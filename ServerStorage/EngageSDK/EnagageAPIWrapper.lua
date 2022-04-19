@@ -1,8 +1,8 @@
 local module = {}
 
 local HttpService = game:GetService("HttpService")
-local ENGAGE_URL = " https://engageteach.herokuapp.com/gameplay/"
---local ENGAGE_URL = " http://localhost:5001/gameplay/"
+--local ENGAGE_URL = " https://engageteach.herokuapp.com/gameplay/"
+local ENGAGE_URL = " http://localhost:5001/gameplay/"
 
 local apiKey = script:GetAttribute("apiKey")
 
@@ -17,7 +17,10 @@ local function getRequest(uri_extension)
 	local response = HttpService:RequestAsync(
 		{
 			Url = ENGAGE_URL .. uri_extension,
-			Method = "GET"
+			Method = "GET",
+			Headers = {
+				["Authorization"] = "Bearer " .. apiKey
+			}
 		}
 	)
 	return {response.StatusCode, parseBody(response.Body)}
@@ -29,7 +32,8 @@ local function postRequest(uri_extension, bodyDict)
 			Url = ENGAGE_URL .. uri_extension,
 			Method = "POST",
 			Headers = {
-				["Content-Type"] = "application/json"  -- When sending JSON, set this!
+				["Content-Type"] = "application/json",
+				["Authorization"] = "Bearer " .. apiKey
 			},
 			Body = HttpService:JSONEncode(bodyDict)
 		}
