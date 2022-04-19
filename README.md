@@ -1,21 +1,15 @@
-# engage-sdk
-Engage Luau SDK
+# Engage SDK
+This SDK assists developers in creating educational content on the Roblox platform. 
 
-## Components
-* See progress
-* Fetch knowledge
-* Fetch affective states
-* Get questions (random, qid, difficulty)
-* Leave response
-* Join/leave
+TODO mention the basic model, leave room for a video insert demoing the install of the plugin & use
 
-### Rev1
-* join
-* get questions
-* leave response
+Add instructions below describing how to use the plugin..
 
-### Rev2
-* Show progress
+This SDK & the associated Plugin, Roblox Teach, (TODo insert hyperlink) 
 
-### Rev3
+## Installation
+1. 
+
+### Future Additions
+* Show progress GUI
 * Fetch knowledge
