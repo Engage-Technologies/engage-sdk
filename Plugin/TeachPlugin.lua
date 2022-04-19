@@ -113,7 +113,8 @@ local function decideAvailableFrames()
 		setVisibleFrame("api")
 	else
 		-- Load the SDK & Transition to Question Frame
-		engageSDK = require( ServerStorage.EngageSDK.EngageSDKModule )
+		local engageSDKFolder = ServerStorage:FindFirstChild("EngageSDK")
+		engageSDK = require( engageSDKFolder:WaitForChild("EngageSDKModule"):Clone() )
 		setVisibleFrame("question")
 	end
 end
@@ -127,12 +128,25 @@ local function setCurrentZoneNumber(zoneNumber)
 	previousZoneNumber = zoneNumber
 end
 
+local function initializeEngageZones()
+	local zoneNum = 1
+	backendScript:SetAttribute("EngageZones", zoneNum)
+	return zoneNum
+end
+
 local function getMaxZoneNumber()
-	local maxZones = 0
+	local maxZones
+	
 	local success, message = pcall(function()
 		maxZones = backendScript:GetAttribute("EngageZones")
 	end)
-	return maxZones
+	
+	-- Initialize
+	if maxZones == nil then
+		return initializeEngageZones()
+	else
+		return maxZones
+	end
 end
 
 local function incrementMaxZoneNumber()	
@@ -333,6 +347,7 @@ local function buildQuestionFrame()
 				local missingComponents = {}
 
 				local components = engageSDK.findZoneComponents(i, {"question", "response", "option"})
+
 				if not components["question"] then
 					table.insert(missingComponents, "question")
 				end
@@ -507,6 +522,9 @@ local function buildQuestionFrame()
 			if #selection > 1 then
 				print("[ERROR] Only select one object to place the question/option on.")
 				return
+			elseif #selection == 0 then
+				print("[ERROR] Must select an object to place " .. component)
+				return
 			end
 			local componentObj = selection[1]
 
@@ -524,7 +542,7 @@ local function buildQuestionFrame()
 				setVisibleFrame("surface")
 			end
 			surfaceEditObject = surfaceGUI
-
+			
 			local zoneComponents = engageSDK.findZoneComponents(getCurrentZoneNumber(), {"question", "option"})
 
 			-- All components on our surface
