@@ -2,11 +2,11 @@
 local Selection = game:GetService("Selection")
 local CollectionService = game:GetService("CollectionService")
 
-local versionNum = "1.0.0"
+local versionNum = "1.0.1"
 
 local toolbar = plugin:CreateToolbar("Teach " .. versionNum)
 
-local newWidgetButton = toolbar:CreateButton("Teach", "Launch Roblox Teach Plugin", "rbxassetid://9341661015")
+local newWidgetButton = toolbar:CreateButton("Teach", "Launch Roblox Teach Plugin", "rbxassetid://9415737981")
 newWidgetButton.ClickableWhenViewportHidden = true
 
 -- Create new "DockWidgetPluginGuiInfo" object
@@ -87,9 +87,9 @@ local function setVisibleFrame(frame)
 end
 
 local function updateAPIKey(newApiKey)
-	
+
 	--TODO Check to make sure the API key is valid
-	
+
 	apiKey = newApiKey
 	Plugin:SetSetting("apiKey", apiKey)
 
@@ -128,7 +128,11 @@ local function setCurrentZoneNumber(zoneNumber)
 end
 
 local function getMaxZoneNumber()
-	return backendScript:GetAttribute("EngageZones")
+	local maxZones = 0
+	local success, message = pcall(function()
+		maxZones = backendScript:GetAttribute("EngageZones")
+	end)
+	return maxZones
 end
 
 local function incrementMaxZoneNumber()	
@@ -204,7 +208,7 @@ local function buildQuestionFrame()
 	logoLabel.Size = UDim2.new(1, 0, 0.15, 0)
 	logoLabel.Text = "Roblox Teach"
 	logoLabel.TextScaled = true
-	
+
 	local settingsButton = Instance.new("ImageButton", questionFrame)
 	settingsButton.BorderSizePixel = 0
 	settingsButton.Position = UDim2.new(0.9, 0, 0, 0)
@@ -229,7 +233,7 @@ local function buildQuestionFrame()
 		zoneLabel.Size = UDim2.new(0.2, 0, 1, 0)
 		zoneLabel.Text = "Zone"
 		zoneLabel.TextScaled = true
-		
+
 
 		local function adjustSurfaceGuiZone(oldZone, newZone)
 			local selection = Selection:Get()
@@ -536,7 +540,7 @@ local function buildQuestionFrame()
 				print("[ERROR] Zone " .. tostring(getCurrentZoneNumber()) .. " " .. component .. " already placed.")
 				return
 			end
-			
+
 			if allComponents[component:lower()] and not onlyAdd then
 				allComponents[component:lower()]:Destroy()
 				allComponents[component:lower()] = nil
@@ -785,7 +789,7 @@ local function buildSettingsFrame()
 	logoLabel.Size = UDim2.new(1, 0, 0.15, 0)
 	logoLabel.Text = "Settings"
 	logoLabel.TextScaled = true
-	
+
 	local backButton = Instance.new("ImageButton", settingsFrame)
 	backButton.BorderSizePixel = 0
 	backButton.Size = UDim2.new(0.1,0,0.15, 0)
@@ -796,24 +800,24 @@ local function buildSettingsFrame()
 	backButton.MouseButton1Click:Connect(function()
 		setVisibleFrame("question")
 	end)
-	
+
 	local scrollingFrame = Instance.new("ScrollingFrame", settingsFrame)
 	scrollingFrame.Position = UDim2.new(0,0,0.2,0)
 	scrollingFrame.Size = UDim2.new(1,0,0.8,0)
-	
+
 	local uiListLayout = Instance.new("UIListLayout", scrollingFrame)
-	
+
 	-- API Settings
 	local function buildAPISettings()
 		local settingsApiFrame = Instance.new("Frame", scrollingFrame)
 		settingsApiFrame.Size = UDim2.new(1,0,0.1,0)
-		
+
 		local textlabel = Instance.new("TextLabel", settingsApiFrame)
 		textlabel.BorderSizePixel = 0
 		textlabel.Size = UDim2.new(0.5,0,1,0)
 		textlabel.Text = "API Key"
 		textlabel.TextScaled = true
-		
+
 		local textbox = Instance.new("TextBox", settingsApiFrame)
 		textbox.Position = UDim2.new(0.5,0,0,0)
 		textbox.Size = UDim2.new(0.5, 0, 1, 0)
@@ -830,16 +834,16 @@ local function buildSettingsFrame()
 		end)
 	end
 	buildAPISettings()
-	
-	
+
+
 end
 
 Selection.SelectionChanged:Connect(function()
-	
+
 	if visibleFrame == "surface" then
 		setVisibleFrame("question")
 	end
-	
+
 	for i, selection in ipairs(Selection:Get()) do
 
 		local tags = CollectionService:GetTags(selection)
@@ -861,14 +865,14 @@ end)
 local function syncGuiColors(objects)
 	local function setColors()
 		for _, guiObject in pairs(objects) do
-			
+
 			-- Attempt to sync text color
 			local _, _ = pcall(function()
 				guiObject.BackgroundColor3 = settings().Studio.Theme:GetColor(Enum.StudioStyleGuideColor.MainBackground)
 				guiObject.TextColor3 = settings().Studio.Theme:GetColor(Enum.StudioStyleGuideColor.MainText)
 				guiObject.BorderColor3 = settings().Studio.Theme:GetColor(Enum.StudioStyleGuideColor.MainText)
 			end)
-			
+
 		end
 	end
 	-- Run 'setColors()' function to initially sync colors
