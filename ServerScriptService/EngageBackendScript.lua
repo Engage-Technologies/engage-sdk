@@ -12,6 +12,9 @@ local newQuestionEvent = eventsFolder:FindFirstChild("NewQuestion")
 -- Zone Information
 local questionZoneInfo = {}
 
+-- MACROS
+local PULL_QUESTIONS_IN_ADVANCE = 2
+
 -- Add joining of players
 local Players = game:GetService("Players")
 Players.PlayerAdded:Connect(
@@ -94,7 +97,7 @@ for zoneNum = 1, numQuestionZones do
 				
 				-- update the next question
 				if correct then
-					updateQuestionZone(zoneNum + 1, player.UserId)
+					updateQuestionZone(zoneNum + PULL_QUESTIONS_IN_ADVANCE, player.UserId)
 				end
 				
 				wait(3)
