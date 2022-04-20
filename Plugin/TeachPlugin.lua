@@ -31,7 +31,7 @@ end
 newWidgetButton.Click:Connect(onWidgetLaunch)
 
 local Plugin = PluginManager():CreatePlugin()
-local apiKey = nil --= Plugin:GetSetting("apiKey")
+local apiKey = Plugin:GetSetting("apiKey")
 
 local apiKeyFrame = Instance.new("Frame", TeachWidget)
 local questionFrame = Instance.new("Frame", TeachWidget)
