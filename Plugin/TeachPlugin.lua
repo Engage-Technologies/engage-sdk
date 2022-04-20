@@ -929,8 +929,33 @@ local function syncGuiColors(objects)
 	settings().Studio.ThemeChanged:Connect(setColors)
 end
 
+local function installFiles()
+	
+	-- Install ServerScriptService
+	if not ServerScriptService:FindFirstChild("EngageBackendScript") then
+		local file = script.ServerScriptService.EngageBackendScript:Clone()
+		file.Parent = ServerScriptService
+		file.Disabled = false
+	end
+	-- Install GetFirstQuestionScript
+	if not ServerScriptService:FindFirstChild("GetFirstQuestionScript") then
+		local file = script.ServerScriptService.GetFirstQuestionScript:Clone()
+		file.Parent = ServerScriptService
+		file.Disabled = false
+	end
+	
+	-- EngageSDK
+	if not ServerStorage:FindFirstChild("EngageSDK") then
+		local folder = script.EngageSDK:Clone()
+		folder.Parent = ServerStorage
+	end
+end
+
 
 if RunService:IsEdit() then
+	
+	installFiles()
+	
 	buildApiKeyFrame()
 	buildInstallFrame()
 	buildSurfacePlacementFrame()
