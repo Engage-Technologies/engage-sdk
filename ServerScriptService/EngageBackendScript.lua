@@ -57,14 +57,17 @@ local function changeObjectColor(obj, correct)
 		obj.Transparency = RESPONSE_TRANSPARENCY
 	end
 	
+	local priorColor = obj.Color
 	if correct then
 		obj.Color = Color3.fromRGB(0, 255, 0)
 	else
 		obj.Color = Color3.fromRGB(255, 0, 0)
 	end
+	return priorColor
 end
 
-local function unchangeObjectColor(obj)
+local function unchangeObjectColor(obj, priorColor)
+	obj.Color = priorColor
 	print(obj.Transparency)
 	if obj.Transparency == RESPONSE_TRANSPARENCY then
 		obj.Transparency = 1
@@ -90,7 +93,7 @@ for zoneNum = 1, numQuestionZones do
 			local partParent = touchedPart.Parent
 			-- Look for a humanoid in the parent
 			local humanoid = partParent:FindFirstChildWhichIsA("Humanoid")
-			if humanoid and db then
+			if humanoid and db and humanoid.Health > 0 then
 				db = false
 
 				print("Zone " .. zoneNum .. ". You selected: " .. option)
@@ -110,7 +113,7 @@ for zoneNum = 1, numQuestionZones do
 					humanoid.Health = 0
 				end
 				
-				changeObjectColor(responseObj, correct)
+				local priorColor = changeObjectColor(responseObj, correct)
 
 				local player = Players:GetPlayerFromCharacter(humanoid.Parent)
 				local instanceId = questionZoneInfo[zoneNum]["question_instance_id"]
@@ -123,7 +126,7 @@ for zoneNum = 1, numQuestionZones do
 				end
 
 				wait(2)
-				unchangeObjectColor(responseObj)
+				unchangeObjectColor(responseObj, priorColor)
 				db = true
 			end
 
