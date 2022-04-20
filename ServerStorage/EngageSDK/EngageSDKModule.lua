@@ -16,7 +16,6 @@ local function shuffleOptions(questionInfo)
 		table.insert(options, value)
 	end
 
-
 	local function shuffleArray(arr)
 		-- https://devforum.roblox.com/t/an-efficient-way-to-randomize-a-list-of-maps-or-items/223583/3
 		local arrCopy = {unpack(arr)} -- # making copy of arr

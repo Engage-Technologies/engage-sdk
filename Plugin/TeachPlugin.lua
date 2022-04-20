@@ -163,6 +163,17 @@ local function incrementMaxZoneNumber()
 	return newNumZones
 end
 
+local function attemptBackendConnect(code)
+	-- Remove whitespace from code
+	code = code:gsub("%s+","")
+	
+	-- Register game
+	local loggedInUserId = StudioService:GetUserId()
+	local loggedInUserName = Players:GetNameFromUserIdAsync(loggedInUserId)
+
+	return engageSDK.registerGame(code, loggedInUserId, loggedInUserName)
+end
+
 local function buildApiKeyFrame()
 	apiKeyFrame.Size = UDim2.new(1, 0, 1, 0)
 
@@ -201,18 +212,11 @@ local function buildApiKeyFrame()
 	apiKeyBox.FocusLost:Connect(function(enterPressed)
 		
 		-- Remove whitespace
-		local code = apiKeyBox.Text:gsub("%s+","")
-		
+		local code = apiKeyBox.Text
 		
 		if code ~= "" then
-			
 			print("Registering game with backend...")
-			
-			-- Register game
-			local loggedInUserId = StudioService:GetUserId()
-			local loggedInUserName = Players:GetNameFromUserIdAsync(loggedInUserId)
-
-			local success = engageSDK.registerGame(code, loggedInUserId, loggedInUserName)
+			local success = attemptBackendConnect(code)
 			
 			if success then
 				print("API Key Accepted.")
@@ -836,7 +840,7 @@ local function buildSettingsFrame()
 	local uiListLayout = Instance.new("UIListLayout", scrollingFrame)
 
 	-- API Settings
-	local function buildAPISettings()
+	local function buildAPIKey()
 		local settingsApiFrame = Instance.new("Frame", scrollingFrame)
 		settingsApiFrame.Size = UDim2.new(1,0,0.1,0)
 
@@ -857,15 +861,20 @@ local function buildSettingsFrame()
 		end
 		textbox.TextScaled = true
 		textbox.FocusLost:Connect(function(enterPressed)
-			-- Update the API Key
-			if textbox.Text ~= "" then
-				updateAPIKey(textbox.Text)
+			local code = textbox.Text
+			if code ~= "" then
+				local success = attemptBackendConnect(code)
+				if success then
+					print("API Key Accepted.")
+					updateAPIKey(code)
+					decideAvailableFrames()
+				end
 			else
 				textbox.Text = apiKey
 			end
 		end)
 	end
-	buildAPISettings()
+	buildAPIKey()
 
 
 end
