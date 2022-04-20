@@ -3,6 +3,7 @@ local Selection = game:GetService("Selection")
 local CollectionService = game:GetService("CollectionService")
 local StudioService = game:GetService("StudioService")
 local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
 
 local versionNum = "1.0.2"
 
@@ -42,7 +43,8 @@ local settingsFrame = Instance.new("Frame", TeachWidget)
 local ServerScriptService = game:GetService("ServerScriptService")
 local ServerStorage = game:GetService("ServerStorage")
 local engageSDK
-local backendScript
+
+local backendScript = ServerScriptService:FindFirstChild("EngageBackendScript")
 
 -- Question Zone attributes
 local zoneBox
@@ -928,13 +930,14 @@ local function syncGuiColors(objects)
 end
 
 
+if RunService:IsEdit() then
+	buildApiKeyFrame()
+	buildInstallFrame()
+	buildSurfacePlacementFrame()
+	buildQuestionFrame()
+	buildSettingsFrame()
 
-buildApiKeyFrame()
-buildInstallFrame()
-buildSurfacePlacementFrame()
-buildQuestionFrame()
-buildSettingsFrame()
+	decideAvailableFrames()
 
-decideAvailableFrames()
-
-syncGuiColors(TeachWidget:GetDescendants())
+	syncGuiColors(TeachWidget:GetDescendants())
+end
