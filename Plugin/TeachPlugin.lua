@@ -5,7 +5,7 @@ local StudioService = game:GetService("StudioService")
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 
-local versionNum = "1.0.2"
+local versionNum = "1.0.6"
 
 local toolbar = plugin:CreateToolbar("Teach " .. versionNum)
 
@@ -31,12 +31,10 @@ local function onWidgetLaunch()
 end
 newWidgetButton.Click:Connect(onWidgetLaunch)
 
-local Plugin = PluginManager():CreatePlugin()
-local apiKey = Plugin:GetSetting("apiKey")
+local apiKey
 
 local apiKeyFrame = Instance.new("Frame", TeachWidget)
 local questionFrame = Instance.new("Frame", TeachWidget)
-local installFrame = Instance.new("Frame", TeachWidget)
 local surfacePlacementFrame = Instance.new("Frame", TeachWidget)
 local settingsFrame = Instance.new("Frame", TeachWidget)
 
@@ -52,32 +50,15 @@ local surfaceEditObject
 local previousZoneNumber -- used by when modifying the textbox number
 local visibleFrame
 
-local function findMissingFiles()
-	-- Check the EngageSDK and EngageBackendScript have been installed
-	backendScript = ServerScriptService:FindFirstChild("EngageBackendScript")
-	if not backendScript then
-		return "ServerScriptService/EngageBackendScript"
-	end
-	local ServerStorage = game:GetService("ServerStorage")
-	if not ServerStorage:FindFirstChild("EngageSDK") then
-		return "ServerStorage/EngageSDK"
-	end
-	return nil
-end
-
 local function setVisibleFrame(frame)
 	apiKeyFrame.Visible = false
 	questionFrame.Visible = false
-	installFrame.Visible = false
 	surfacePlacementFrame.Visible = false
 	settingsFrame.Visible = false
 
 	if frame == "api" then
 		apiKeyFrame.Visible = true
-		visibleFrame = "api"
-	elseif frame == "question" then
-		questionFrame.Visible = true
-		visibleFrame = "question"
+		visibleFrame = "api"		
 	elseif frame == "surface" then
 		surfacePlacementFrame.Visible = true
 		visibleFrame = "surface"
@@ -85,8 +66,8 @@ local function setVisibleFrame(frame)
 		settingsFrame.Visible = true
 		visibleFrame = "settings"
 	else
-		installFrame.Visible = true
-		visibleFrame = "install"
+		questionFrame.Visible = true
+		visibleFrame = "question"
 	end
 end
 
@@ -104,7 +85,6 @@ end
 local function updateAPIKey(newApiKey)
 
 	apiKey = newApiKey
-	Plugin:SetSetting("apiKey", apiKey)
 
 	-- Attempt to update the API Key in the code
 	local success, message = pcall(function()
@@ -118,15 +98,6 @@ end
 
 local function decideAvailableFrames()
 	-- Decides which frames are available to run next
-
-	-- Get the Engage API Code
-	if findMissingFiles() then
-		setVisibleFrame("install")
-	end
-
-	-- Load the SDK & Transition to Question Frame
-	local engageSDKFolder = ServerStorage:FindFirstChild("EngageSDK")
-	engageSDK = require( engageSDKFolder:WaitForChild("EngageSDKModule"):Clone() )
 
 	if apiKey == nil then
 		setVisibleFrame("api")
@@ -675,71 +646,6 @@ local function buildQuestionFrame()
 
 end
 
-local function buildInstallFrame()
-	installFrame.BorderSizePixel = 0
-	installFrame.Size = UDim2.new(1,0,1,0)
-
-	local line1Label = Instance.new("TextLabel", installFrame)
-	line1Label.BorderSizePixel = 0
-	line1Label.Size = UDim2.new(1,0,0.2,0)
-	line1Label.Text = "Missing Installation File(s):"
-	line1Label.TextScaled = true
-
-	local missingFilesLabel = Instance.new("TextLabel", installFrame)
-	missingFilesLabel.BorderSizePixel = 0
-	missingFilesLabel.Position = UDim2.new(0,0,0.25,0)
-	missingFilesLabel.Size = UDim2.new(1,0,0.1,0)
-	local missingFiles = findMissingFiles()
-	if missingFiles then
-		missingFilesLabel.Text = "'" .. missingFiles .. "'"
-	end
-	missingFilesLabel.TextScaled = true
-
-	local line2Label = Instance.new("TextLabel", installFrame)
-	line2Label.BorderSizePixel = 0
-	line2Label.Size = UDim2.new(1,0,0.1,0)
-	line2Label.Position = UDim2.new(0,0,0.4,0)
-	line2Label.Text = "Please go to"
-	line2Label.TextScaled = true
-
-	local githubBox = Instance.new("TextBox", installFrame)
-	githubBox.BorderSizePixel = 0
-	githubBox.Position = UDim2.new(0,0,0.5,0)
-	githubBox.Size = UDim2.new(1,0,0.1,0)
-	githubBox.Text = "https://github.com/Engage-Technologies/engage-sdk"
-	githubBox.TextScaled = true
-	githubBox.TextEditable = false
-	githubBox.Selectable = true
-	githubBox.ClearTextOnFocus = false
-
-	local line3Label = Instance.new("TextLabel", installFrame)
-	line3Label.BorderSizePixel = 0
-	line3Label.Position = UDim2.new(0, 0, 0.6, 0)
-	line3Label.Size = UDim2.new(1,0,0.1,0)
-	line3Label.Text = "for installation instructions."
-	line3Label.TextScaled = true
-
-	local updateButton = Instance.new("TextButton", installFrame)
-	updateButton.AnchorPoint = Vector2.new(0.5,0)
-	updateButton.BorderSizePixel = 1
-	updateButton.Position = UDim2.new(0.5, 0, 0.75, 0)
-	updateButton.Selectable = true
-	updateButton.Size = UDim2.new(0.5, 0, 0.2, 0)
-	updateButton.Text = "Recheck Install"
-	updateButton.TextScaled = true
-
-	updateButton.MouseButton1Click:Connect(function()
-
-		local missingFile = findMissingFiles()
-		if missingFile then
-			missingFilesLabel.Text = "'" .. missingFile .. "'"
-		else
-			setVisibleFrame("question")
-		end
-	end)
-
-end
-
 local function buildSurfacePlacementFrame()
 	surfacePlacementFrame.BorderSizePixel = 0
 	surfacePlacementFrame.Size = UDim2.new(1,0,1,0)
@@ -936,6 +842,10 @@ local function installFiles()
 		local file = script.ServerScriptService.EngageBackendScript:Clone()
 		file.Parent = ServerScriptService
 		file.Disabled = false
+		file:SetAttribute("EngageZones", 0)
+		backendScript = file
+	else
+		backendScript = ServerScriptService:FindFirstChild("EngageBackendScript")
 	end
 	-- Install GetFirstQuestionScript
 	if not ServerScriptService:FindFirstChild("GetFirstQuestionScript") then
@@ -948,16 +858,24 @@ local function installFiles()
 	if not ServerStorage:FindFirstChild("EngageSDK") then
 		local folder = script.EngageSDK:Clone()
 		folder.Parent = ServerStorage
+		engageSDK = require( ServerStorage:FindFirstChild("EngageSDK"):FindFirstChild("EngageSDKModule"):Clone() )
+	else
+		engageSDK = require( ServerStorage:FindFirstChild("EngageSDK"):FindFirstChild("EngageSDKModule"):Clone() )
 	end
 end
 
+local function attemptToGrabApiKey()
+	local apiWrapper = ServerStorage:FindFirstChild("EngageSDK"):FindFirstChild("EngageAPIWrapper")
+	apiKey = apiWrapper:GetAttribute("apiKey")
+end
 
 if RunService:IsEdit() then
 	
 	installFiles()
 	
+	attemptToGrabApiKey()
+	
 	buildApiKeyFrame()
-	buildInstallFrame()
 	buildSurfacePlacementFrame()
 	buildQuestionFrame()
 	buildSettingsFrame()

@@ -93,7 +93,6 @@ function module.addPlayer(player)
 		end
 	else
 		print("Unable to connect to " .. ENGAGE_URL)
-		print(resp)
 		print(message)
 	end
 
