@@ -1,8 +1,10 @@
 -- Create a new toolbar section titled "Custom Script Tools"
 local Selection = game:GetService("Selection")
 local CollectionService = game:GetService("CollectionService")
+local StudioService = game:GetService("StudioService")
+local Players = game:GetService("Players")
 
-local versionNum = "1.0.1"
+local versionNum = "1.0.2"
 
 local toolbar = plugin:CreateToolbar("Teach " .. versionNum)
 
@@ -29,7 +31,7 @@ end
 newWidgetButton.Click:Connect(onWidgetLaunch)
 
 local Plugin = PluginManager():CreatePlugin()
-local apiKey = Plugin:GetSetting("apiKey")
+local apiKey = nil --= Plugin:GetSetting("apiKey")
 
 local apiKeyFrame = Instance.new("Frame", TeachWidget)
 local questionFrame = Instance.new("Frame", TeachWidget)
@@ -88,8 +90,6 @@ end
 
 local function updateAPIKey(newApiKey)
 
-	--TODO Check to make sure the API key is valid
-
 	apiKey = newApiKey
 	Plugin:SetSetting("apiKey", apiKey)
 
@@ -109,11 +109,18 @@ local function decideAvailableFrames()
 	-- Get the Engage API Code
 	if findMissingFiles() then
 		setVisibleFrame("install")
-	elseif not apiKeyFrame then
+	end
+	
+	-- Load the SDK & Transition to Question Frame
+	local engageSDKFolder = ServerStorage:FindFirstChild("EngageSDK")
+	engageSDK = require( engageSDKFolder:WaitForChild("EngageSDKModule"):Clone() )
+	
+	if apiKey == nil then
 		setVisibleFrame("api")
 	else
-		-- Load the SDK & Transition to Question Frame
-		engageSDK = require( ServerStorage.EngageSDK.EngageSDKModule )
+		-- Always update the API Key
+		updateAPIKey(apiKey)
+		
 		setVisibleFrame("question")
 	end
 end
@@ -127,12 +134,25 @@ local function setCurrentZoneNumber(zoneNumber)
 	previousZoneNumber = zoneNumber
 end
 
+local function initializeEngageZones()
+	local zoneNum = 1
+	backendScript:SetAttribute("EngageZones", zoneNum)
+	return zoneNum
+end
+
 local function getMaxZoneNumber()
-	local maxZones = 0
+	local maxZones
+	
 	local success, message = pcall(function()
 		maxZones = backendScript:GetAttribute("EngageZones")
 	end)
-	return maxZones
+	
+	-- Initialize
+	if maxZones == nil then
+		return initializeEngageZones()
+	else
+		return maxZones
+	end
 end
 
 local function incrementMaxZoneNumber()	
@@ -178,24 +198,29 @@ local function buildApiKeyFrame()
 	apiKeyBox.TextScaled = true
 	apiKeyBox.Text = "API Key"
 
-	local function onConnect()
-		local code = apiKeyBox.Text
-
-		-- Attempt to connect to backend
-		if code ~= "" then
-			print("Connecting with " .. code)
-			updateAPIKey(code)
-			decideAvailableFrames()
-		end
-	end
-
 	apiKeyBox.FocusLost:Connect(function(enterPressed)
-		if enterPressed then
-			onConnect()
-		else
-			if apiKeyBox.Text == "" then
-				apiKeyBox.Text = "API Key"
+		
+		-- Remove whitespace
+		local code = apiKeyBox.Text:gsub("%s+","")
+		
+		
+		if code ~= "" then
+			
+			print("Registering game with backend...")
+			
+			-- Register game
+			local loggedInUserId = StudioService:GetUserId()
+			local loggedInUserName = Players:GetNameFromUserIdAsync(loggedInUserId)
+
+			local success = engageSDK.registerGame(code, loggedInUserId, loggedInUserName)
+			
+			if success then
+				print("API Key Accepted.")
+				updateAPIKey(code)
+				decideAvailableFrames()
 			end
+		else
+			apiKeyBox.Text = "API Key"
 		end
 	end)
 end
@@ -333,6 +358,7 @@ local function buildQuestionFrame()
 				local missingComponents = {}
 
 				local components = engageSDK.findZoneComponents(i, {"question", "response", "option"})
+
 				if not components["question"] then
 					table.insert(missingComponents, "question")
 				end
@@ -507,6 +533,9 @@ local function buildQuestionFrame()
 			if #selection > 1 then
 				print("[ERROR] Only select one object to place the question/option on.")
 				return
+			elseif #selection == 0 then
+				print("[ERROR] Must select an object to place " .. component)
+				return
 			end
 			local componentObj = selection[1]
 
@@ -524,7 +553,7 @@ local function buildQuestionFrame()
 				setVisibleFrame("surface")
 			end
 			surfaceEditObject = surfaceGUI
-
+			
 			local zoneComponents = engageSDK.findZoneComponents(getCurrentZoneNumber(), {"question", "option"})
 
 			-- All components on our surface
@@ -591,9 +620,8 @@ local function buildQuestionFrame()
 
 			-- Check we have tagged this object
 			local tagName = "QuestionZone" .. tostring(getCurrentZoneNumber())
-			if not CollectionService:HasTag(componentObj, tagName) then
-				CollectionService:AddTag(componentObj, tagName)
-			end
+			CollectionService:AddTag(componentObj, tagName)
+			componentObj.Anchored = true
 
 			if componentObj:GetAttribute("EngageType") ~= nil then
 				componentObj:SetAttribute("EngageType", nil)
@@ -822,7 +850,11 @@ local function buildSettingsFrame()
 		textbox.Position = UDim2.new(0.5,0,0,0)
 		textbox.Size = UDim2.new(0.5, 0, 1, 0)
 		textbox.PlaceholderText = ""
-		textbox.Text = apiKey
+		if apiKey ~= nil then
+			textbox.Text = apiKey
+		else
+			textbox.Text = ""
+		end
 		textbox.TextScaled = true
 		textbox.FocusLost:Connect(function(enterPressed)
 			-- Update the API Key
@@ -880,6 +912,8 @@ local function syncGuiColors(objects)
 	-- Connect 'ThemeChanged' event to the 'setColors()' function
 	settings().Studio.ThemeChanged:Connect(setColors)
 end
+
+
 
 buildApiKeyFrame()
 buildInstallFrame()
