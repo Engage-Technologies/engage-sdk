@@ -2,8 +2,8 @@ local module = {}
 
 local HttpService = game:GetService("HttpService")
 
---local ENGAGE_URL = " https://engageteach.herokuapp.com/gameplay/"
-local ENGAGE_URL = " http://localhost:5001/gameplay/"
+local ENGAGE_URL = " https://engageteach.herokuapp.com/gameplay/"
+--local ENGAGE_URL = " http://localhost:5001/gameplay/"
 
 local apiKey = script:GetAttribute("apiKey")
 if apiKey == nil then
@@ -12,7 +12,7 @@ end
 
 local function testHttpEnabled()
 	-- Ping a website to test if HTTP is enabled
-	
+
 	local success, message = pcall(function()
 		HttpService:GetAsync("https://httpbin.org/")
 	end)

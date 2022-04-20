@@ -107,12 +107,9 @@ function module.findZoneComponents(zoneNum, matchingAttributes)
 
 end
 
-<<<<<<< HEAD
-=======
 function module.registerGame(code, developerId, developerName)
 	return engageAPIWrapper.registerGame(code, developerId, developerName)
 end
 
->>>>>>> 50f0a9694da38a80735147340e32633710f735e0
 
 return module

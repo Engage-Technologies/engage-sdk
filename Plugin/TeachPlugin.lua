@@ -88,6 +88,17 @@ local function setVisibleFrame(frame)
 	end
 end
 
+local function attemptBackendConnect(code)
+	-- Remove whitespace from code
+	code = code:gsub("%s+","")
+
+	-- Register game
+	local loggedInUserId = StudioService:GetUserId()
+	local loggedInUserName = Players:GetNameFromUserIdAsync(loggedInUserId)
+
+	return engageSDK.registerGame(code, loggedInUserId, loggedInUserName)
+end
+
 local function updateAPIKey(newApiKey)
 
 	apiKey = newApiKey
@@ -110,17 +121,22 @@ local function decideAvailableFrames()
 	if findMissingFiles() then
 		setVisibleFrame("install")
 	end
-	
+
 	-- Load the SDK & Transition to Question Frame
 	local engageSDKFolder = ServerStorage:FindFirstChild("EngageSDK")
 	engageSDK = require( engageSDKFolder:WaitForChild("EngageSDKModule"):Clone() )
-	
+
 	if apiKey == nil then
 		setVisibleFrame("api")
 	else
 		-- Always update the API Key
-		updateAPIKey(apiKey)
+		local success = attemptBackendConnect(apiKey)
+		if not success then
+			print("API Key verification failed.")
+		end
 		
+		updateAPIKey(apiKey)
+
 		setVisibleFrame("question")
 	end
 end
@@ -142,11 +158,11 @@ end
 
 local function getMaxZoneNumber()
 	local maxZones
-	
+
 	local success, message = pcall(function()
 		maxZones = backendScript:GetAttribute("EngageZones")
 	end)
-	
+
 	-- Initialize
 	if maxZones == nil then
 		return initializeEngageZones()
@@ -161,17 +177,6 @@ local function incrementMaxZoneNumber()
 	backendScript:SetAttribute("EngageZones", newNumZones)
 	setCurrentZoneNumber(newNumZones)
 	return newNumZones
-end
-
-local function attemptBackendConnect(code)
-	-- Remove whitespace from code
-	code = code:gsub("%s+","")
-	
-	-- Register game
-	local loggedInUserId = StudioService:GetUserId()
-	local loggedInUserName = Players:GetNameFromUserIdAsync(loggedInUserId)
-
-	return engageSDK.registerGame(code, loggedInUserId, loggedInUserName)
 end
 
 local function buildApiKeyFrame()
@@ -210,14 +215,14 @@ local function buildApiKeyFrame()
 	apiKeyBox.Text = "API Key"
 
 	apiKeyBox.FocusLost:Connect(function(enterPressed)
-		
+
 		-- Remove whitespace
 		local code = apiKeyBox.Text
-		
+
 		if code ~= "" then
 			print("Registering game with backend...")
 			local success = attemptBackendConnect(code)
-			
+
 			if success then
 				print("API Key Accepted.")
 				updateAPIKey(code)
@@ -557,7 +562,7 @@ local function buildQuestionFrame()
 				setVisibleFrame("surface")
 			end
 			surfaceEditObject = surfaceGUI
-			
+
 			local zoneComponents = engageSDK.findZoneComponents(getCurrentZoneNumber(), {"question", "option"})
 
 			-- All components on our surface
