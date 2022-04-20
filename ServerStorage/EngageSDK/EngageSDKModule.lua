@@ -2,7 +2,7 @@ local module = {}
 
 local ServerStorage = game:GetService("ServerStorage")
 local engageSDKFolder = ServerStorage:WaitForChild("EngageSDK")
-local engageAPIWrapper = require(engageSDKFolder:WaitForChild("EngageAPIWrapper"))
+local engageAPIWrapper = require(engageSDKFolder:WaitForChild("EngageAPIWrapper"):Clone())
 local CollectionService = game:GetService("CollectionService")
 
 local function shuffleOptions(questionInfo)
@@ -15,7 +15,6 @@ local function shuffleOptions(questionInfo)
 	for key, value in pairs(questionInfo["options"]) do
 		table.insert(options, value)
 	end
-
 
 	local function shuffleArray(arr)
 		-- https://devforum.roblox.com/t/an-efficient-way-to-randomize-a-list-of-maps-or-items/223583/3
@@ -108,5 +107,12 @@ function module.findZoneComponents(zoneNum, matchingAttributes)
 
 end
 
+<<<<<<< HEAD
+=======
+function module.registerGame(code, developerId, developerName)
+	return engageAPIWrapper.registerGame(code, developerId, developerName)
+end
+
+>>>>>>> 50f0a9694da38a80735147340e32633710f735e0
 
 return module

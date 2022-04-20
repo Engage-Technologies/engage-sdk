@@ -1,8 +1,10 @@
 -- Create a new toolbar section titled "Custom Script Tools"
 local Selection = game:GetService("Selection")
 local CollectionService = game:GetService("CollectionService")
+local StudioService = game:GetService("StudioService")
+local Players = game:GetService("Players")
 
-local versionNum = "1.0.1"
+local versionNum = "1.0.2"
 
 local toolbar = plugin:CreateToolbar("Teach " .. versionNum)
 
@@ -88,8 +90,6 @@ end
 
 local function updateAPIKey(newApiKey)
 
-	--TODO Check to make sure the API key is valid
-
 	apiKey = newApiKey
 	Plugin:SetSetting("apiKey", apiKey)
 
@@ -109,12 +109,18 @@ local function decideAvailableFrames()
 	-- Get the Engage API Code
 	if findMissingFiles() then
 		setVisibleFrame("install")
-	elseif not apiKeyFrame then
+	end
+	
+	-- Load the SDK & Transition to Question Frame
+	local engageSDKFolder = ServerStorage:FindFirstChild("EngageSDK")
+	engageSDK = require( engageSDKFolder:WaitForChild("EngageSDKModule"):Clone() )
+	
+	if apiKey == nil then
 		setVisibleFrame("api")
 	else
-		-- Load the SDK & Transition to Question Frame
-		local engageSDKFolder = ServerStorage:FindFirstChild("EngageSDK")
-		engageSDK = require( engageSDKFolder:WaitForChild("EngageSDKModule"):Clone() )
+		-- Always update the API Key
+		updateAPIKey(apiKey)
+		
 		setVisibleFrame("question")
 	end
 end
@@ -157,6 +163,17 @@ local function incrementMaxZoneNumber()
 	return newNumZones
 end
 
+local function attemptBackendConnect(code)
+	-- Remove whitespace from code
+	code = code:gsub("%s+","")
+	
+	-- Register game
+	local loggedInUserId = StudioService:GetUserId()
+	local loggedInUserName = Players:GetNameFromUserIdAsync(loggedInUserId)
+
+	return engageSDK.registerGame(code, loggedInUserId, loggedInUserName)
+end
+
 local function buildApiKeyFrame()
 	apiKeyFrame.Size = UDim2.new(1, 0, 1, 0)
 
@@ -192,24 +209,22 @@ local function buildApiKeyFrame()
 	apiKeyBox.TextScaled = true
 	apiKeyBox.Text = "API Key"
 
-	local function onConnect()
-		local code = apiKeyBox.Text
-
-		-- Attempt to connect to backend
-		if code ~= "" then
-			print("Connecting with " .. code)
-			updateAPIKey(code)
-			decideAvailableFrames()
-		end
-	end
-
 	apiKeyBox.FocusLost:Connect(function(enterPressed)
-		if enterPressed then
-			onConnect()
-		else
-			if apiKeyBox.Text == "" then
-				apiKeyBox.Text = "API Key"
+		
+		-- Remove whitespace
+		local code = apiKeyBox.Text
+		
+		if code ~= "" then
+			print("Registering game with backend...")
+			local success = attemptBackendConnect(code)
+			
+			if success then
+				print("API Key Accepted.")
+				updateAPIKey(code)
+				decideAvailableFrames()
 			end
+		else
+			apiKeyBox.Text = "API Key"
 		end
 	end)
 end
@@ -609,9 +624,8 @@ local function buildQuestionFrame()
 
 			-- Check we have tagged this object
 			local tagName = "QuestionZone" .. tostring(getCurrentZoneNumber())
-			if not CollectionService:HasTag(componentObj, tagName) then
-				CollectionService:AddTag(componentObj, tagName)
-			end
+			CollectionService:AddTag(componentObj, tagName)
+			componentObj.Anchored = true
 
 			if componentObj:GetAttribute("EngageType") ~= nil then
 				componentObj:SetAttribute("EngageType", nil)
@@ -826,7 +840,7 @@ local function buildSettingsFrame()
 	local uiListLayout = Instance.new("UIListLayout", scrollingFrame)
 
 	-- API Settings
-	local function buildAPISettings()
+	local function buildAPIKey()
 		local settingsApiFrame = Instance.new("Frame", scrollingFrame)
 		settingsApiFrame.Size = UDim2.new(1,0,0.1,0)
 
@@ -840,18 +854,27 @@ local function buildSettingsFrame()
 		textbox.Position = UDim2.new(0.5,0,0,0)
 		textbox.Size = UDim2.new(0.5, 0, 1, 0)
 		textbox.PlaceholderText = ""
-		textbox.Text = apiKey
+		if apiKey ~= nil then
+			textbox.Text = apiKey
+		else
+			textbox.Text = ""
+		end
 		textbox.TextScaled = true
 		textbox.FocusLost:Connect(function(enterPressed)
-			-- Update the API Key
-			if textbox.Text ~= "" then
-				updateAPIKey(textbox.Text)
+			local code = textbox.Text
+			if code ~= "" then
+				local success = attemptBackendConnect(code)
+				if success then
+					print("API Key Accepted.")
+					updateAPIKey(code)
+					decideAvailableFrames()
+				end
 			else
 				textbox.Text = apiKey
 			end
 		end)
 	end
-	buildAPISettings()
+	buildAPIKey()
 
 
 end
@@ -898,6 +921,8 @@ local function syncGuiColors(objects)
 	-- Connect 'ThemeChanged' event to the 'setColors()' function
 	settings().Studio.ThemeChanged:Connect(setColors)
 end
+
+
 
 buildApiKeyFrame()
 buildInstallFrame()
