@@ -5,7 +5,7 @@ local StudioService = game:GetService("StudioService")
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 
-local versionNum = "1.0.8"
+local versionNum = "1.0.9"
 
 local toolbar = plugin:CreateToolbar("Teach " .. versionNum)
 
@@ -843,6 +843,13 @@ local function syncGuiColors(objects)
 	settings().Studio.ThemeChanged:Connect(setColors)
 end
 
+local function checkInstallation()
+	if ServerStorage:FindFirstChild("TeachSDK") == nil or ServerScriptService:FindFirstChild("TeachScripts") == nil then
+		return false
+	end
+	return true
+end
+
 local function waitForInstallAccept()
 	installFrame.Size = UDim2.new(1, 0, 1, 0)
 	installFrame.Visible = true
@@ -850,7 +857,7 @@ local function waitForInstallAccept()
 	local memoLabel = Instance.new("TextLabel", installFrame)
 	memoLabel.BorderSizePixel = 0
 	memoLabel.Size = UDim2.new(1, 0, 0.3, 0)
-	memoLabel.Text = "Teach Plugin would like to insert the following scripts"
+	memoLabel.Text = "Teach Plugin would like to insert the following scripts:"
 	memoLabel.TextScaled = true
 
 	local filesLabel = Instance.new("TextLabel", installFrame)
@@ -883,12 +890,37 @@ local function waitForInstallAccept()
 
 end
 
+local function loadFiles()
+	local teachScriptFolder = ServerScriptService:FindFirstChild("TeachScripts")
+	teachScriptFolder.Parent = ServerScriptService
 
+	-- Backend Script
+	backendScript = teachScriptFolder:FindFirstChild("TeachBackendScript")
+	
+	TeachSDK = require( ServerStorage:FindFirstChild("TeachSDK"):FindFirstChild("TeachSDKModule"):Clone() )
+	
+	-- Get Engage Number of Zones
+	local zoneNum = 1
+	while true do
+		
+		local tagName = "QuestionZone" .. tostring(zoneNum)
+
+		local zoneObjects = CollectionService:GetTagged(tagName)
+		
+		if #zoneObjects < 1 then
+			break
+		end
+		zoneNum += 1
+		
+	end
+	
+	backendScript:SetAttribute("TeachZones", zoneNum - 1)
+end
 
 local function installFiles()
 	
 	-- Teach Scripts
-	if not ServerScriptService:FindFirstChild("TeachScripts") then
+	if ServerScriptService:FindFirstChild("TeachScripts") == nil then
 		local teachScriptFolder = script.TeachScripts:Clone()
 		teachScriptFolder.Parent = ServerScriptService
 		
@@ -920,7 +952,7 @@ local function installFiles()
 	--end
 	
 	-- TeachSDK
-	if not ServerStorage:FindFirstChild("TeachSDK") then
+	if not ServerStorage:FindFirstChild("TeachSDK") == nil then
 		local folder = script.TeachSDK:Clone()
 		folder.Parent = ServerStorage
 		TeachSDK = require( ServerStorage:FindFirstChild("TeachSDK"):FindFirstChild("TeachSDKModule"):Clone() )
@@ -936,9 +968,11 @@ end
 
 if RunService:IsEdit() then
 	
-	waitForInstallAccept()
-	
-	installFiles()
+	if not checkInstallation() then
+		waitForInstallAccept()
+		installFiles()
+	end
+	loadFiles()
 	
 	attemptToGrabApiKey()
 	
