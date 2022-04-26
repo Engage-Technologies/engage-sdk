@@ -5,7 +5,7 @@ local StudioService = game:GetService("StudioService")
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 
-local versionNum = "1.0.9"
+local versionNum = "1.1.0"
 
 local toolbar = plugin:CreateToolbar("Teach " .. versionNum)
 
@@ -952,7 +952,7 @@ local function installFiles()
 	--end
 	
 	-- TeachSDK
-	if not ServerStorage:FindFirstChild("TeachSDK") == nil then
+	if ServerStorage:FindFirstChild("TeachSDK") == nil then
 		local folder = script.TeachSDK:Clone()
 		folder.Parent = ServerStorage
 		TeachSDK = require( ServerStorage:FindFirstChild("TeachSDK"):FindFirstChild("TeachSDKModule"):Clone() )
