@@ -4,10 +4,10 @@ The Teach SDK assists developers in creating educational content on the Roblox p
 ## Demo
 
 ## Installation
-1. Copy all files in ServerScriptService to your game's ServerScriptService folder
-2. Copy the EngageSDK directory in ServerStorage to your game's ServerStorage. The directory hierarchy should be maintained: ServerStorage/EngageSDK
-3. Install The "Teach Plugin" & enter your _Teach API Key_
-4. Enable HTTP Requests: Game Settings->Security->Allow HTTP Requests
+1. Enable HTTP Requests in your game: Game Settings->Security->Allow HTTP Requests
+2. Install the Teach Plugin & Follow the installation instructions in the plugin. Allow for script insertion.
+The plugin will insert required scripts into ServerStorage & ServerScriptService
+
 ## Design
 The Teach SDK features a Plugin that enables the developer to place a question on any surface in a Roblox game. The player touches an object in the game to respond to the question. Each question is multiple choice with 3 options. Every option has a corresponding 'response' or object that needs to be touched to respond to the question. The components of a question therefore are:
 1. The question (e.g. 7+5)
