@@ -5,7 +5,7 @@ local StudioService = game:GetService("StudioService")
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 
-local versionNum = "1.0.6"
+local versionNum = "1.0.7"
 
 local toolbar = plugin:CreateToolbar("Teach " .. versionNum)
 
@@ -37,6 +37,13 @@ local apiKeyFrame = Instance.new("Frame", TeachWidget)
 local questionFrame = Instance.new("Frame", TeachWidget)
 local surfacePlacementFrame = Instance.new("Frame", TeachWidget)
 local settingsFrame = Instance.new("Frame", TeachWidget)
+local installFrame = Instance.new("Frame", TeachWidget)
+apiKeyFrame.Visible = false
+questionFrame.Visible = false
+surfacePlacementFrame.Visible = false
+settingsFrame.Visible = false
+installFrame.Visible = false
+
 
 local ServerScriptService = game:GetService("ServerScriptService")
 local ServerStorage = game:GetService("ServerStorage")
@@ -55,6 +62,7 @@ local function setVisibleFrame(frame)
 	questionFrame.Visible = false
 	surfacePlacementFrame.Visible = false
 	settingsFrame.Visible = false
+	installFrame.Visible = false
 
 	if frame == "api" then
 		apiKeyFrame.Visible = true
@@ -835,24 +843,81 @@ local function syncGuiColors(objects)
 	settings().Studio.ThemeChanged:Connect(setColors)
 end
 
+local function waitForInstallAccept()
+	installFrame.Size = UDim2.new(1, 0, 1, 0)
+	installFrame.Visible = true
+
+	local memoLabel = Instance.new("TextLabel", installFrame)
+	memoLabel.BorderSizePixel = 0
+	memoLabel.Size = UDim2.new(1, 0, 0.3, 0)
+	memoLabel.Text = "Teach Plugin would like to insert the following scripts"
+	memoLabel.TextScaled = true
+
+	local filesLabel = Instance.new("TextLabel", installFrame)
+	filesLabel.BorderSizePixel = 0
+	filesLabel.Size = UDim2.new(1,0,0.4, 0)
+	filesLabel.Text = "ServerStorage/TeachSDK ServerScriptService/TeachScripts"
+	filesLabel.TextScaled = true
+	filesLabel.Position = UDim2.new(0,0,0.3,0)
+
+	local okButton = Instance.new("TextButton", installFrame)
+	okButton.BorderSizePixel = 1
+	okButton.Size = UDim2.new(1,0,0.3,0)
+	okButton.Position = UDim2.new(0,0,0.7,0)
+	okButton.TextScaled = true
+	okButton.Text = "OK"
+
+	local accepted = false
+
+	okButton.MouseButton1Click:Connect(function()
+		accepted = true
+	end)
+	
+	syncGuiColors(TeachWidget:GetDescendants())
+
+	while wait() do
+		if accepted then
+			break
+		end
+	end
+
+end
+
+
+
 local function installFiles()
 	
+	-- Teach Scripts
+	if not ServerScriptService:FindFirstChild("TeachScripts") then
+		local teachScriptFolder = script.TeachScripts:Clone()
+		teachScriptFolder.Parent = ServerScriptService
+		
+		-- Backend Script
+		backendScript = teachScriptFolder:FindFirstChild("EngageBackendScript")
+		backendScript.Disabled = false
+		backendScript:SetAttribute("EngageZones", 0)
+		
+		-- GetFirstQuestionScript
+		local file = teachScriptFolder:FindFirstChild("GetFirstQuestionScript")
+		file.Disabled = false
+	end
+	
 	-- Install ServerScriptService
-	if not ServerScriptService:FindFirstChild("EngageBackendScript") then
-		local file = script.ServerScriptService.EngageBackendScript:Clone()
-		file.Parent = ServerScriptService
-		file.Disabled = false
-		file:SetAttribute("EngageZones", 0)
-		backendScript = file
-	else
-		backendScript = ServerScriptService:FindFirstChild("EngageBackendScript")
-	end
-	-- Install GetFirstQuestionScript
-	if not ServerScriptService:FindFirstChild("GetFirstQuestionScript") then
-		local file = script.ServerScriptService.GetFirstQuestionScript:Clone()
-		file.Parent = ServerScriptService
-		file.Disabled = false
-	end
+	--if not ServerScriptService:FindFirstChild("EngageBackendScript") then
+	--	local file = script.ServerScriptService.EngageBackendScript:Clone()
+	--	file.Parent = ServerScriptService
+	--	file.Disabled = false
+	--	file:SetAttribute("EngageZones", 0)
+	--	backendScript = file
+	--else
+	--	backendScript = ServerScriptService:FindFirstChild("EngageBackendScript")
+	--end
+	---- Install GetFirstQuestionScript
+	--if not ServerScriptService:FindFirstChild("GetFirstQuestionScript") then
+	--	local file = script.ServerScriptService.GetFirstQuestionScript:Clone()
+	--	file.Parent = ServerScriptService
+	--	file.Disabled = false
+	--end
 	
 	-- EngageSDK
 	if not ServerStorage:FindFirstChild("EngageSDK") then
@@ -870,6 +935,8 @@ local function attemptToGrabApiKey()
 end
 
 if RunService:IsEdit() then
+	
+	waitForInstallAccept()
 	
 	installFiles()
 	
