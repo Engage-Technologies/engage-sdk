@@ -1,7 +1,7 @@
 local Players = game:GetService("Players")
 local ServerStorage = game:GetService("ServerStorage")
-local engageSDKFolder = ServerStorage:FindFirstChild("EngageSDK")
-local eventsFolder = engageSDKFolder:FindFirstChild("Events")
+local teachSDKFolder = ServerStorage:FindFirstChild("TeachSDK")
+local eventsFolder = teachSDKFolder:FindFirstChild("Events")
 local newQuestionEvent = eventsFolder:FindFirstChild("NewQuestion")
 
 -- Pull first 2 questions

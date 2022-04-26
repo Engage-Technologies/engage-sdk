@@ -1,12 +1,12 @@
 local ServerStorage = game:GetService("ServerStorage")
-local engageSDK = require(ServerStorage.EngageSDK.EngageSDKModule)
-local engageSurfaceUpdater = require(ServerStorage.EngageSDK.SurfaceModule)
+local teachSDK = require(ServerStorage.TeachSDK.TeachSDKModule)
+local teachSurfaceUpdater = require(ServerStorage.TeachSDK.SurfaceModule)
 local CollectionService = game:GetService("CollectionService")
-local numQuestionZones = script:GetAttribute("EngageZones")
+local numQuestionZones = script:GetAttribute("TeachZones")
 
 -- Updating Question From External Source
-local engageSDKFolder = ServerStorage:FindFirstChild("EngageSDK")
-local eventsFolder = engageSDKFolder:FindFirstChild("Events")
+local teachSDKFolder = ServerStorage:FindFirstChild("TeachSDK")
+local eventsFolder = teachSDKFolder:FindFirstChild("Events")
 local newQuestionEvent = eventsFolder:FindFirstChild("NewQuestion")
 
 -- Zone Information
@@ -19,11 +19,11 @@ local RESPONSE_TRANSPARENCY = 0.5 -- Needs to be increment of 0.1 or else float 
 -- Add joining of players
 local Players = game:GetService("Players")
 Players.PlayerAdded:Connect(
-	engageSDK.addPlayer
+	teachSDK.addPlayer
 )
 
 Players.PlayerRemoving:Connect(
-	engageSDK.removePlayer
+	teachSDK.removePlayer
 )
 
 local function updateQuestionZone(zoneNum, playerId)
@@ -35,7 +35,7 @@ local function updateQuestionZone(zoneNum, playerId)
 	end
 
 	-- Pull the new question
-	questionZoneInfo[zoneNum] = engageSDK.getQuestion(playerId)
+	questionZoneInfo[zoneNum] = teachSDK.getQuestion(playerId)
 
 	-- Check for success in new question info
 	if not questionZoneInfo[zoneNum] then
@@ -43,11 +43,11 @@ local function updateQuestionZone(zoneNum, playerId)
 	end
 
 	-- Find the question and option zone components
-	local zoneComponents = engageSDK.findZoneComponents(zoneNum, {"question", "option"})
+	local zoneComponents = teachSDK.findZoneComponents(zoneNum, {"question", "option"})
 
 	-- Update the surfaces	
 	for key, value in pairs(zoneComponents) do
-		engageSurfaceUpdater.updateSurface(value, questionZoneInfo[zoneNum][key])
+		teachSurfaceUpdater.updateSurface(value, questionZoneInfo[zoneNum][key])
 	end
 
 end
@@ -68,7 +68,6 @@ end
 
 local function unchangeObjectColor(obj, priorColor)
 	obj.Color = priorColor
-	print(obj.Transparency)
 	if obj.Transparency == RESPONSE_TRANSPARENCY then
 		obj.Transparency = 1
 	end
@@ -80,13 +79,13 @@ newQuestionEvent.Event:Connect(updateQuestionZone)
 -- Add Responses
 for zoneNum = 1, numQuestionZones do
 
-	local zoneObjects = engageSDK.findZoneComponents(zoneNum, {"response"})
+	local zoneObjects = teachSDK.findZoneComponents(zoneNum, {"response"})
 	-- Handle responses
 	for key, responseObj in pairs(zoneObjects) do
 
 		local db = true -- does this variable get replicated OR need to be a global table?
 
-		local response = responseObj:GetAttribute("EngageType")
+		local response = responseObj:GetAttribute("TeachType")
 		local option = "option"..tostring( response:sub(-1, -1) )
 
 		local function touched(touchedPart)
@@ -96,7 +95,7 @@ for zoneNum = 1, numQuestionZones do
 			if humanoid and db and humanoid.Health > 0 then
 				db = false
 
-				print("Zone " .. zoneNum .. ". You selected: " .. option)
+				--print("Zone " .. zoneNum .. ". You selected: " .. option)
 
 				if not questionZoneInfo[zoneNum] then
 					print("Question " .. tostring(zoneNum) .. " was never updated")
@@ -118,7 +117,7 @@ for zoneNum = 1, numQuestionZones do
 				local player = Players:GetPlayerFromCharacter(humanoid.Parent)
 				local instanceId = questionZoneInfo[zoneNum]["question_instance_id"]
 
-				engageSDK.leaveResponse(player.UserId, instanceId, response, correct, nil, nil)
+				teachSDK.leaveResponse(player.UserId, instanceId, response, correct, nil, nil)
 
 				-- update the next question
 				if correct then

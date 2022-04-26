@@ -5,7 +5,7 @@ local StudioService = game:GetService("StudioService")
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 
-local versionNum = "1.0.7"
+local versionNum = "1.0.8"
 
 local toolbar = plugin:CreateToolbar("Teach " .. versionNum)
 
@@ -47,9 +47,9 @@ installFrame.Visible = false
 
 local ServerScriptService = game:GetService("ServerScriptService")
 local ServerStorage = game:GetService("ServerStorage")
-local engageSDK
+local TeachSDK
 
-local backendScript = ServerScriptService:FindFirstChild("EngageBackendScript")
+local backendScript = ServerScriptService:FindFirstChild("TeachBackendScript")
 
 -- Question Zone attributes
 local zoneBox
@@ -87,7 +87,7 @@ local function attemptBackendConnect(code)
 	local loggedInUserId = StudioService:GetUserId()
 	local loggedInUserName = Players:GetNameFromUserIdAsync(loggedInUserId)
 
-	return engageSDK.registerGame(code, loggedInUserId, loggedInUserName)
+	return TeachSDK.registerGame(code, loggedInUserId, loggedInUserName)
 end
 
 local function updateAPIKey(newApiKey)
@@ -96,11 +96,11 @@ local function updateAPIKey(newApiKey)
 
 	-- Attempt to update the API Key in the code
 	local success, message = pcall(function()
-		local apiWrapper = ServerStorage.EngageSDK.EngageAPIWrapper
+		local apiWrapper = ServerStorage.TeachSDK.TeachAPIWrapper
 		apiWrapper:SetAttribute("apiKey", apiKey) -- subpar way to store the API Key
 	end)
 	if not success then
-		print("[ERROR] Unable to update API Key. Add attribute 'apiKey' to EngageSDK/EngageAPIWrapper.lua")
+		print("[ERROR] Unable to update API Key. Add attribute 'apiKey' to TeachSDK/TeachAPIWrapper.lua")
 	end
 end
 
@@ -131,9 +131,9 @@ local function setCurrentZoneNumber(zoneNumber)
 	previousZoneNumber = zoneNumber
 end
 
-local function initializeEngageZones()
+local function initializeTeachZones()
 	local zoneNum = 1
-	backendScript:SetAttribute("EngageZones", zoneNum)
+	backendScript:SetAttribute("TeachZones", zoneNum)
 	return zoneNum
 end
 
@@ -141,12 +141,12 @@ local function getMaxZoneNumber()
 	local maxZones
 
 	local success, message = pcall(function()
-		maxZones = backendScript:GetAttribute("EngageZones")
+		maxZones = backendScript:GetAttribute("TeachZones")
 	end)
 
 	-- Initialize
 	if maxZones == nil then
-		return initializeEngageZones()
+		return initializeTeachZones()
 	else
 		return maxZones
 	end
@@ -155,7 +155,7 @@ end
 local function incrementMaxZoneNumber()	
 	local numZones = getMaxZoneNumber()
 	local newNumZones = numZones + 1
-	backendScript:SetAttribute("EngageZones", newNumZones)
+	backendScript:SetAttribute("TeachZones", newNumZones)
 	setCurrentZoneNumber(newNumZones)
 	return newNumZones
 end
@@ -347,7 +347,7 @@ local function buildQuestionFrame()
 			for i = 1, getMaxZoneNumber() do
 				local missingComponents = {}
 
-				local components = engageSDK.findZoneComponents(i, {"question", "response", "option"})
+				local components = TeachSDK.findZoneComponents(i, {"question", "response", "option"})
 
 				if not components["question"] then
 					table.insert(missingComponents, "question")
@@ -435,7 +435,7 @@ local function buildQuestionFrame()
 		response3Button.TextScaled = true
 
 		--local function redrawButtons()
-		--	local zoneComponents = engageSDK.findZoneComponents(getCurrentZoneNumber(), {"question", "option","response"})
+		--	local zoneComponents = TeachSDK.findZoneComponents(getCurrentZoneNumber(), {"question", "option","response"})
 
 		--	local alreadyPlacedColor = Color3.fromRGB(0, 0, 0)
 		--	local notPlacedColor = settings().Studio.Theme:GetColor(Enum.StudioStyleGuideColor.MainBackground)
@@ -493,7 +493,7 @@ local function buildQuestionFrame()
 
 		local function createNewFrame(parent, componentType)
 			local componentFrame = Instance.new("Frame", parent)
-			componentFrame:SetAttribute("EngageType", componentType:lower())
+			componentFrame:SetAttribute("TeachType", componentType:lower())
 			componentFrame.Size = UDim2.new(1,0,1,0)
 			componentFrame.Name = componentType .. "Frame"
 			componentFrame.BackgroundTransparency = 1
@@ -544,7 +544,7 @@ local function buildQuestionFrame()
 			end
 			surfaceEditObject = surfaceGUI
 
-			local zoneComponents = engageSDK.findZoneComponents(getCurrentZoneNumber(), {"question", "option"})
+			local zoneComponents = TeachSDK.findZoneComponents(getCurrentZoneNumber(), {"question", "option"})
 
 			-- All components on our surface
 			local allComponents = {}
@@ -613,10 +613,10 @@ local function buildQuestionFrame()
 			CollectionService:AddTag(componentObj, tagName)
 			componentObj.Anchored = true
 
-			if componentObj:GetAttribute("EngageType") ~= nil then
-				componentObj:SetAttribute("EngageType", nil)
+			if componentObj:GetAttribute("TeachType") ~= nil then
+				componentObj:SetAttribute("TeachType", nil)
 			else
-				componentObj:SetAttribute("EngageType", responseType)
+				componentObj:SetAttribute("TeachType", responseType)
 			end
 		end
 
@@ -893,9 +893,9 @@ local function installFiles()
 		teachScriptFolder.Parent = ServerScriptService
 		
 		-- Backend Script
-		backendScript = teachScriptFolder:FindFirstChild("EngageBackendScript")
+		backendScript = teachScriptFolder:FindFirstChild("TeachBackendScript")
 		backendScript.Disabled = false
-		backendScript:SetAttribute("EngageZones", 0)
+		backendScript:SetAttribute("TeachZones", 0)
 		
 		-- GetFirstQuestionScript
 		local file = teachScriptFolder:FindFirstChild("GetFirstQuestionScript")
@@ -903,14 +903,14 @@ local function installFiles()
 	end
 	
 	-- Install ServerScriptService
-	--if not ServerScriptService:FindFirstChild("EngageBackendScript") then
-	--	local file = script.ServerScriptService.EngageBackendScript:Clone()
+	--if not ServerScriptService:FindFirstChild("TeachBackendScript") then
+	--	local file = script.ServerScriptService.TeachBackendScript:Clone()
 	--	file.Parent = ServerScriptService
 	--	file.Disabled = false
-	--	file:SetAttribute("EngageZones", 0)
+	--	file:SetAttribute("TeachZones", 0)
 	--	backendScript = file
 	--else
-	--	backendScript = ServerScriptService:FindFirstChild("EngageBackendScript")
+	--	backendScript = ServerScriptService:FindFirstChild("TeachBackendScript")
 	--end
 	---- Install GetFirstQuestionScript
 	--if not ServerScriptService:FindFirstChild("GetFirstQuestionScript") then
@@ -919,18 +919,18 @@ local function installFiles()
 	--	file.Disabled = false
 	--end
 	
-	-- EngageSDK
-	if not ServerStorage:FindFirstChild("EngageSDK") then
-		local folder = script.EngageSDK:Clone()
+	-- TeachSDK
+	if not ServerStorage:FindFirstChild("TeachSDK") then
+		local folder = script.TeachSDK:Clone()
 		folder.Parent = ServerStorage
-		engageSDK = require( ServerStorage:FindFirstChild("EngageSDK"):FindFirstChild("EngageSDKModule"):Clone() )
+		TeachSDK = require( ServerStorage:FindFirstChild("TeachSDK"):FindFirstChild("TeachSDKModule"):Clone() )
 	else
-		engageSDK = require( ServerStorage:FindFirstChild("EngageSDK"):FindFirstChild("EngageSDKModule"):Clone() )
+		TeachSDK = require( ServerStorage:FindFirstChild("TeachSDK"):FindFirstChild("TeachSDKModule"):Clone() )
 	end
 end
 
 local function attemptToGrabApiKey()
-	local apiWrapper = ServerStorage:FindFirstChild("EngageSDK"):FindFirstChild("EngageAPIWrapper")
+	local apiWrapper = ServerStorage:FindFirstChild("TeachSDK"):FindFirstChild("TeachAPIWrapper")
 	apiKey = apiWrapper:GetAttribute("apiKey")
 end
 

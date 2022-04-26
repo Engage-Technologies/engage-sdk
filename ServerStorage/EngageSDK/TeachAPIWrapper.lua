@@ -2,8 +2,8 @@ local module = {}
 
 local HttpService = game:GetService("HttpService")
 
-local ENGAGE_URL = " https://engageteach.herokuapp.com/gameplay/"
---local ENGAGE_URL = " http://localhost:5001/gameplay/"
+local TEACH_URL = " https://engageteach.herokuapp.com/gameplay/"
+--local TEACH_URL = " http://localhost:5001/gameplay/"
 
 local apiKey = script:GetAttribute("apiKey")
 if apiKey == nil then
@@ -29,7 +29,7 @@ end
 local function getRequest(uri_extension)
 	local response = HttpService:RequestAsync(
 		{
-			Url = ENGAGE_URL .. uri_extension,
+			Url = TEACH_URL .. uri_extension,
 			Method = "GET",
 			Headers = {
 				["Authorization"] = "Bearer " .. apiKey
@@ -42,7 +42,7 @@ end
 local function postRequest(uri_extension, bodyDict)
 	local response = HttpService:RequestAsync(
 		{
-			Url = ENGAGE_URL .. uri_extension,
+			Url = TEACH_URL .. uri_extension,
 			Method = "POST",
 			Headers = {
 				["Content-Type"] = "application/json",
@@ -57,7 +57,7 @@ end
 local function putRequest(uri_extension, bodyDict, code)
 	local response = HttpService:RequestAsync(
 		{
-			Url = ENGAGE_URL .. uri_extension,
+			Url = TEACH_URL .. uri_extension,
 			Method = "PUT",
 			Headers = {
 				["Content-Type"] = "application/json",
@@ -92,7 +92,7 @@ function module.addPlayer(player)
 			return true
 		end
 	else
-		print("Unable to connect to " .. ENGAGE_URL)
+		print("Unable to connect to " .. TEACH_URL)
 		print(message)
 	end
 
@@ -121,7 +121,7 @@ function module.removePlayer(player)
 			return true
 		end
 	else
-		print("Unable to connect to " .. ENGAGE_URL)
+		print("Unable to connect to " .. TEACH_URL)
 	end
 
 	return nil
@@ -152,7 +152,7 @@ function module.getQuestion(player_id)
 		--	end
 		--end
 	else
-		print("Unable to connect to " .. ENGAGE_URL)
+		print("Unable to connect to " .. TEACH_URL)
 	end
 
 	return nil
@@ -190,7 +190,7 @@ function module.leaveResponse(player_id, instace_id, response, correct, started_
 			return true
 		end
 	else
-		print("Unable to connect to " .. ENGAGE_URL)
+		print("Unable to connect to " .. TEACH_URL)
 	end
 
 	return nil

@@ -1,8 +1,8 @@
 local module = {}
 
 local ServerStorage = game:GetService("ServerStorage")
-local engageSDKFolder = ServerStorage:WaitForChild("EngageSDK")
-local engageAPIWrapper = require(engageSDKFolder:WaitForChild("EngageAPIWrapper"):Clone())
+local TeachSDKFolder = ServerStorage:WaitForChild("TeachSDK")
+local TeachAPIWrapper = require(TeachSDKFolder:WaitForChild("TeachAPIWrapper"):Clone())
 local CollectionService = game:GetService("CollectionService")
 
 local function shuffleOptions(questionInfo)
@@ -42,17 +42,17 @@ end
 
 -- Module functions
 function module.addPlayer(player)
-	engageAPIWrapper.addPlayer(player)
+	TeachAPIWrapper.addPlayer(player)
 end
 
 function module.removePlayer(player)
-	engageAPIWrapper.removePlayer(player)
+	TeachAPIWrapper.removePlayer(player)
 end
 
 function module.getQuestion(playerId)
 
 	-- Acquire new question information
-	local questionInfo = engageAPIWrapper.getQuestion(playerId)
+	local questionInfo = TeachAPIWrapper.getQuestion(playerId)
 	if questionInfo then
 
 		-- Shuffle options
@@ -64,13 +64,13 @@ function module.getQuestion(playerId)
 end
 
 function module.leaveResponse(playerId, instanceId, response, correct, startedAt, answeredAt)
-	engageAPIWrapper.leaveResponse(playerId, instanceId, response, correct, startedAt, answeredAt)
+	TeachAPIWrapper.leaveResponse(playerId, instanceId, response, correct, startedAt, answeredAt)
 end
 
 local function findQuestionComponents(obj)
 	local components = {obj}
 	for _, child in ipairs(obj:GetDescendants()) do
-		if child:GetAttribute("EngageType") then
+		if child:GetAttribute("TeachType") then
 			table.insert(components, child)
 		end
 	end
@@ -78,7 +78,7 @@ local function findQuestionComponents(obj)
 end
 
 function module.findZoneComponents(zoneNum, matchingAttributes)
-	-- matchingAttribute - array of substrings to match in "EngageType" attribute
+	-- matchingAttribute - array of substrings to match in "TeachType" attribute
 
 	-- Loop through all tags
 	local tagName = "QuestionZone" .. zoneNum
@@ -91,12 +91,12 @@ function module.findZoneComponents(zoneNum, matchingAttributes)
 		local components = findQuestionComponents(zoneObj)
 
 		for _, component in ipairs(components) do
-			local engageType = component:GetAttribute("EngageType")
+			local TeachType = component:GetAttribute("TeachType")
 
-			if engageType then
+			if TeachType then
 				for _, attribute in ipairs(matchingAttributes) do
-					if engageType:match(attribute) then
-						foundObjects[engageType] = component
+					if TeachType:match(attribute) then
+						foundObjects[TeachType] = component
 					end
 				end
 			end
@@ -108,7 +108,7 @@ function module.findZoneComponents(zoneNum, matchingAttributes)
 end
 
 function module.registerGame(code, developerId, developerName)
-	return engageAPIWrapper.registerGame(code, developerId, developerName)
+	return TeachAPIWrapper.registerGame(code, developerId, developerName)
 end
 
 
