@@ -5,7 +5,7 @@ local StudioService = game:GetService("StudioService")
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 
-local versionNum = "1.1.1"
+local versionNum = "1.1.2"
 
 local toolbar = plugin:CreateToolbar("Teach " .. versionNum)
 
@@ -253,31 +253,41 @@ local function buildQuestionFrame()
 			-- Let's just label every object with the new zone number?
 			
 			local selection = Selection:Get()
-			for i, selected in ipairs(selection) do
-				for tagNum in 1, getMaxZoneNumber() do
-					local oldTag = "QuestionZone" .. tostring(tagNum)
-					if CollectionService:HasTag(selected, oldTag) then
-						CollectionService:RemoveTag(selected, oldTag)
-						CollectionService:AddTag(selected, "QuestionZone" .. tostring(newZone))
-					end
-				end
-			end
-			
-			for i, selected in ipairs(selection) do
-				if CollectionService:HasTag(selected, oldTag) then
-					CollectionService:RemoveTag(selected, oldTag)
-					CollectionService:AddTag(selected, "QuestionZone" .. tostring(newZone))
-
-					-- we need to refresh the text of any objects
-					local surfaceGUI = selected:FindFirstChildWhichIsA("SurfaceGui")
-					if surfaceGUI then
-						for i, child in pairs(surfaceGUI:GetDescendants()) do
-							if child:isA("TextLabel") then
-								local newText, replaced = child.Text:gsub("z" ..tostring(oldZone), "z"..tostring(newZone))
-								child.Text = newText
+			for _, selected in ipairs(selection) do
+				
+				-- Search through descendants and the root object
+				local allSearch = selected:GetDescendants()
+				table.insert(allSearch, selected)
+				
+				for _, child in pairs(allSearch) do
+					
+					if child:GetAttribute("TeachType") ~= nil then
+						
+						local allTags = CollectionService:GetTags(child)
+						
+						for _, tag in ipairs(allTags) do
+							
+							-- Remove all QuestionZone tags
+							if tag:match("QuestionZone") then
+								CollectionService:RemoveTag(child, tag)
+								
+								local oldZone, _ = tag:gsub("QuestionZone", "")
+								
+								-- Update the textlabel
+								local textLabel = child:FindFirstChildWhichIsA("TextLabel")
+								if textLabel ~= nil then									
+									local newText, replaced = textLabel.Text:gsub("z" .. oldZone, "z"..tostring(newZone))
+									textLabel.Text = newText
+								end
+								
 							end
 						end
+						
+						-- Add correct QuestionZone tag
+						CollectionService:AddTag(child, "QuestionZone" .. tostring(newZone))
+						
 					end
+					
 				end
 			end
 		end
@@ -505,6 +515,8 @@ local function buildQuestionFrame()
 			componentFrame.Size = UDim2.new(1,0,1,0)
 			componentFrame.Name = componentType .. "Frame"
 			componentFrame.BackgroundTransparency = 1
+			CollectionService:AddTag(componentFrame, "QuestionZone" .. tostring(getCurrentZoneNumber()))
+			
 			local imageLabel = Instance.new("ImageLabel", componentFrame)
 			imageLabel.Size = UDim2.new(1,0,1,0)
 			imageLabel.ScaleType = Enum.ScaleType.Stretch
@@ -536,12 +548,6 @@ local function buildQuestionFrame()
 				return
 			end
 			local componentObj = selection[1]
-
-			-- Check we have tagged this object
-			local tagName = "QuestionZone" .. tostring(getCurrentZoneNumber())
-			if not CollectionService:HasTag(componentObj, tagName) then
-				CollectionService:AddTag(componentObj, tagName)
-			end
 
 			-- Check if we have a surface GUI
 			local surfaceGUI = componentObj:FindFirstChildWhichIsA("SurfaceGui")
@@ -815,19 +821,27 @@ Selection.SelectionChanged:Connect(function()
 	end
 
 	for i, selection in ipairs(Selection:Get()) do
+		
+		local descendants = selection:GetDescendants()
+		table.insert(descendants, selection)
+		
+		for _, child in ipairs(descendants) do
+			
+			local tags = CollectionService:GetTags(child)
 
-		local tags = CollectionService:GetTags(selection)
+			for j, tag in ipairs(tags) do
 
-		for j, tag in ipairs(tags) do
+				if tag:match("QuestionZone") then
 
-			if tag:match("QuestionZone") then
+					local newZoneNum, replaced = tag:gsub("QuestionZone", "")
+					setCurrentZoneNumber(tonumber(newZoneNum))
+					return
+				end
 
-				local newZoneNum, replaced = tag:gsub("QuestionZone", "")
-				setCurrentZoneNumber(tonumber(newZoneNum))
-				return
 			end
-
+			
 		end
+		
 	end	
 end)
 
