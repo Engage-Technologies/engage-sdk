@@ -67,16 +67,6 @@ function module.leaveResponse(playerId, instanceId, response, correct, startedAt
 	TeachAPIWrapper.leaveResponse(playerId, instanceId, response, correct, startedAt, answeredAt)
 end
 
-local function findQuestionComponents(obj)
-	local components = {obj}
-	for _, child in ipairs(obj:GetDescendants()) do
-		if child:GetAttribute("TeachType") then
-			table.insert(components, child)
-		end
-	end
-	return components
-end
-
 function module.findZoneComponents(zoneNum, matchingAttributes)
 	-- matchingAttribute - array of substrings to match in "TeachType" attribute
 
@@ -88,16 +78,12 @@ function module.findZoneComponents(zoneNum, matchingAttributes)
 	local foundObjects = {}
 
 	for _, zoneObj in ipairs(zoneObjects) do
-		local components = findQuestionComponents(zoneObj)
-
-		for _, component in ipairs(components) do
-			local TeachType = component:GetAttribute("TeachType")
-
-			if TeachType then
-				for _, attribute in ipairs(matchingAttributes) do
-					if TeachType:match(attribute) then
-						foundObjects[TeachType] = component
-					end
+		
+		local teachType = zoneObj:GetAttribute("TeachType")
+		if teachType then
+			for _, attribute in ipairs(matchingAttributes) do
+				if teachType:match(attribute) then
+					foundObjects[teachType] = zoneObj
 				end
 			end
 		end

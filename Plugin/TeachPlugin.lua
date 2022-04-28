@@ -5,7 +5,7 @@ local StudioService = game:GetService("StudioService")
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 
-local versionNum = "1.1.0"
+local versionNum = "1.1.1"
 
 local toolbar = plugin:CreateToolbar("Teach " .. versionNum)
 
@@ -54,7 +54,6 @@ local backendScript = ServerScriptService:FindFirstChild("TeachBackendScript")
 -- Question Zone attributes
 local zoneBox
 local surfaceEditObject
-local previousZoneNumber -- used by when modifying the textbox number
 local visibleFrame
 
 local function setVisibleFrame(frame)
@@ -128,7 +127,6 @@ end
 
 local function setCurrentZoneNumber(zoneNumber)
 	zoneBox.Text = tostring(zoneNumber)
-	previousZoneNumber = zoneNumber
 end
 
 local function initializeTeachZones()
@@ -250,9 +248,21 @@ local function buildQuestionFrame()
 		zoneLabel.TextScaled = true
 
 
-		local function adjustSurfaceGuiZone(oldZone, newZone)
+		local function adjustSurfaceGuiZone(newZone)
+			-- Adjusts all selected objects to be a part of the new zone number
+			-- Let's just label every object with the new zone number?
+			
 			local selection = Selection:Get()
-			local oldTag = "QuestionZone" .. tostring(oldZone)
+			for i, selected in ipairs(selection) do
+				for tagNum in 1, getMaxZoneNumber() do
+					local oldTag = "QuestionZone" .. tostring(tagNum)
+					if CollectionService:HasTag(selected, oldTag) then
+						CollectionService:RemoveTag(selected, oldTag)
+						CollectionService:AddTag(selected, "QuestionZone" .. tostring(newZone))
+					end
+				end
+			end
+			
 			for i, selected in ipairs(selection) do
 				if CollectionService:HasTag(selected, oldTag) then
 					CollectionService:RemoveTag(selected, oldTag)
@@ -280,7 +290,7 @@ local function buildQuestionFrame()
 		zoneBox.Text = tostring(getMaxZoneNumber())
 		zoneBox.PlaceholderText = "#"
 		zoneBox.TextScaled = true
-		-- TODO callback on changing the zone number..
+
 		zoneBox.FocusLost:Connect(function(enterPressed)
 
 			local newNum
@@ -293,7 +303,7 @@ local function buildQuestionFrame()
 			end
 
 			if newNum then
-				adjustSurfaceGuiZone(previousZoneNumber, newNum)
+				adjustSurfaceGuiZone(newNum)
 			else
 				setCurrentZoneNumber(newNum)
 				print("[ERROR] Unable to convert input to a number")
@@ -311,13 +321,12 @@ local function buildQuestionFrame()
 		upZoneButton.MouseButton1Click:Connect(function()
 			-- Get the new zone number
 			-- Check if it's less than the maxZoneNumber and increment
-			local oldZoneNum = getCurrentZoneNumber()
 			local newZoneNum = getCurrentZoneNumber() + 1
 			if newZoneNum > getMaxZoneNumber() then
 				incrementMaxZoneNumber()
 			end
 			setCurrentZoneNumber(newZoneNum)
-			adjustSurfaceGuiZone(oldZoneNum, newZoneNum)
+			adjustSurfaceGuiZone(newZoneNum)
 		end)
 
 		local downZoneButton = Instance.new("ImageButton", zoneFrame)
@@ -329,10 +338,9 @@ local function buildQuestionFrame()
 		downZoneButton.Image = "rbxassetid://29563813"
 
 		downZoneButton.MouseButton1Click:Connect(function()
-			local oldZoneNum = getCurrentZoneNumber()
 			local newZoneNum = math.max( getCurrentZoneNumber() - 1, 1)
 			setCurrentZoneNumber(newZoneNum)
-			adjustSurfaceGuiZone(oldZoneNum, newZoneNum)
+			adjustSurfaceGuiZone(newZoneNum)
 		end)
 
 		local checkButton = Instance.new("TextButton", zoneFrame)
@@ -927,7 +935,7 @@ local function installFiles()
 		-- Backend Script
 		backendScript = teachScriptFolder:FindFirstChild("TeachBackendScript")
 		backendScript.Disabled = false
-		backendScript:SetAttribute("TeachZones", 0)
+		backendScript:SetAttribute("TeachZones", 1)
 		
 		-- GetFirstQuestionScript
 		local file = teachScriptFolder:FindFirstChild("GetFirstQuestionScript")

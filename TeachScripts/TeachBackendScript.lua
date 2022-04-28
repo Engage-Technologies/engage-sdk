@@ -13,7 +13,7 @@ local newQuestionEvent = eventsFolder:FindFirstChild("NewQuestion")
 local questionZoneInfo = {}
 
 -- MACROS
-local PULL_QUESTIONS_IN_ADVANCE = 2
+local PULL_QUESTIONS_IN_ADVANCE = 2 -- Number of questions to pull in advance of the last answered question
 local RESPONSE_TRANSPARENCY = 0.5 -- Needs to be increment of 0.1 or else float comparison doens't work
 
 -- Add joining of players
