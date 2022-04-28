@@ -5,7 +5,7 @@ local StudioService = game:GetService("StudioService")
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 
-local versionNum = "1.1.2"
+local versionNum = "1.1.3"
 
 local toolbar = plugin:CreateToolbar("Teach " .. versionNum)
 
@@ -307,6 +307,11 @@ local function buildQuestionFrame()
 			local success, errorMsg = pcall(function()
 				newNum = tonumber(zoneBox.Text)
 			end)
+			
+			if newNum == nil then
+				zoneBox.Text = tostring(getMaxZoneNumber())
+				return
+			end
 
 			if newNum > getMaxZoneNumber() then
 				newNum = incrementMaxZoneNumber()
