@@ -6,7 +6,7 @@ The Teach SDK provides personalized and adaptive questions to players at runtime
 For more information about our mission to bring high quality education to Roblox's metaverse, visit [robloxteach.com](robloxteach.com).
 
 ## Demo
-
+https://www.youtube.com/watch?v=IEj26lTgj-I
 ## Installation
 1. Enable HTTP Requests in your game: Game Settings->Security->**Allow HTTP Requests**
 2. Install the [Roblox Teach Plugin](https://www.roblox.com/library/9415678965/Teach-Plugin). **Allow script insertion** to automatically insert the TeachSDK/ and TeachScripts/ folders into the game.
