@@ -11,6 +11,9 @@ https://www.youtube.com/watch?v=IEj26lTgj-I
 1. Enable HTTP Requests in your game: Game Settings->Security->**Allow HTTP Requests**
 2. Install the [Roblox Teach Plugin](https://www.roblox.com/library/9415678965/Teach-Plugin). **Allow script insertion** to automatically insert the TeachSDK/ and TeachScripts/ folders into the game.
 
+## API Key
+* Please email luke@robloxteach.com
+
 ## Design
 The Teach SDK features a Plugin that enables the developer to place a question on any surface in a Roblox game. In order to answer a question, the player touches an object to indicate a response. Each question is multiple choice with 3 options. Every option has a corresponding 'response' or object that needs to be touched to respond to the question. The components of a question therefore are:
 1. The question itself (e.g. 7+5)
