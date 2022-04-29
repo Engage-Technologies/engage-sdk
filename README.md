@@ -8,7 +8,7 @@ For more information about our mission to bring high quality education to Roblox
 ## Demo
 
 ## Installation
-1. Enable HTTP Requests in your game: Game Settings->Security->Allow HTTP Requests
+1. Enable HTTP Requests in your game: Game Settings->Security->**Allow HTTP Requests**
 2. Install the [Roblox Teach Plugin](https://www.roblox.com/library/9415678965/Teach-Plugin). **Allow script insertion** to automatically insert the TeachSDK/ and TeachScripts/ folders into the game.
 
 ## Design
