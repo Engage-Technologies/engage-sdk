@@ -1,18 +1,20 @@
 # Teach SDK
-The Teach SDK assists developers in creating educational content on the Roblox platform by providing all of the tooling necessary to turn any Roblox obby into an interactive educational game. 
+The Teach SDK and [Roblox Plugin](https://www.roblox.com/library/9415678965/Teach-Plugin) assists developers in creating educational content on the Roblox platform by providing all of the tooling necessary to turn any Roblox obby into an interactive educational game. 
 
 The Teach SDK provides personalized and adaptive questions to players at runtime.
 
 For more information about our mission to bring high quality education to Roblox's metaverse, visit [robloxteach.com](robloxteach.com).
 
 ## Demo
+Below is a demonstration video of the plugin being used to add questions to an obby.
+
 https://www.youtube.com/watch?v=IEj26lTgj-I
 ## Installation
 1. Enable HTTP Requests in your game: Game Settings->Security->**Allow HTTP Requests**
 2. Install the [Roblox Teach Plugin](https://www.roblox.com/library/9415678965/Teach-Plugin). **Allow script insertion** to automatically insert the TeachSDK/ and TeachScripts/ folders into the game.
 
 ## API Key
-* Please email luke@robloxteach.com
+* Please email luke@robloxteach.com to request an API Key
 
 ## Design
 The Teach SDK features a Plugin that enables the developer to place a question on any surface in a Roblox game. In order to answer a question, the player touches an object to indicate a response. Each question is multiple choice with 3 options. Every option has a corresponding 'response' or object that needs to be touched to respond to the question. The components of a question therefore are:
