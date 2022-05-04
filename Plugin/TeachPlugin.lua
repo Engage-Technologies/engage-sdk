@@ -5,7 +5,7 @@ local StudioService = game:GetService("StudioService")
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 
-local versionNum = "1.1.3"
+local versionNum = "1.1.4"
 
 local toolbar = plugin:CreateToolbar("Teach " .. versionNum)
 
@@ -877,46 +877,6 @@ local function checkInstallation()
 	return true
 end
 
-local function waitForInstallAccept()
-	installFrame.Size = UDim2.new(1, 0, 1, 0)
-	installFrame.Visible = true
-
-	local memoLabel = Instance.new("TextLabel", installFrame)
-	memoLabel.BorderSizePixel = 0
-	memoLabel.Size = UDim2.new(1, 0, 0.3, 0)
-	memoLabel.Text = "Teach Plugin would like to insert the following scripts:"
-	memoLabel.TextScaled = true
-
-	local filesLabel = Instance.new("TextLabel", installFrame)
-	filesLabel.BorderSizePixel = 0
-	filesLabel.Size = UDim2.new(1,0,0.4, 0)
-	filesLabel.Text = "ServerStorage/TeachSDK ServerScriptService/TeachScripts"
-	filesLabel.TextScaled = true
-	filesLabel.Position = UDim2.new(0,0,0.3,0)
-
-	local okButton = Instance.new("TextButton", installFrame)
-	okButton.BorderSizePixel = 1
-	okButton.Size = UDim2.new(1,0,0.3,0)
-	okButton.Position = UDim2.new(0,0,0.7,0)
-	okButton.TextScaled = true
-	okButton.Text = "OK"
-
-	local accepted = false
-
-	okButton.MouseButton1Click:Connect(function()
-		accepted = true
-	end)
-	
-	syncGuiColors(TeachWidget:GetDescendants())
-
-	while wait() do
-		if accepted then
-			break
-		end
-	end
-
-end
-
 local function loadFiles()
 	local teachScriptFolder = ServerScriptService:FindFirstChild("TeachScripts")
 	teachScriptFolder.Parent = ServerScriptService
@@ -988,6 +948,44 @@ local function installFiles()
 	end
 end
 
+local function waitForInstallAccept()
+	installFrame.Size = UDim2.new(1, 0, 1, 0)
+	installFrame.Visible = true
+
+	local memoLabel = Instance.new("TextLabel", installFrame)
+	memoLabel.BorderSizePixel = 0
+	memoLabel.Size = UDim2.new(1, 0, 0.3, 0)
+	memoLabel.Text = "Teach Plugin would like to insert the following scripts:"
+	memoLabel.TextScaled = true
+
+	local filesLabel = Instance.new("TextLabel", installFrame)
+	filesLabel.BorderSizePixel = 0
+	filesLabel.Size = UDim2.new(1,0,0.4, 0)
+	filesLabel.Text = "ServerStorage/TeachSDK ServerScriptService/TeachScripts"
+	filesLabel.TextScaled = true
+	filesLabel.Position = UDim2.new(0,0,0.3,0)
+
+	local okButton = Instance.new("TextButton", installFrame)
+	okButton.BorderSizePixel = 1
+	okButton.Size = UDim2.new(1,0,0.3,0)
+	okButton.Position = UDim2.new(0,0,0.7,0)
+	okButton.TextScaled = true
+	okButton.Text = "OK"
+
+	okButton.MouseButton1Click:Connect(function()
+		installFiles()
+	end)
+
+	syncGuiColors(TeachWidget:GetDescendants())
+
+	while wait() do
+		if checkInstallation() then
+			break
+		end
+	end
+
+end
+
 local function attemptToGrabApiKey()
 	local apiWrapper = ServerStorage:FindFirstChild("TeachSDK"):FindFirstChild("TeachAPIWrapper")
 	apiKey = apiWrapper:GetAttribute("apiKey")
@@ -997,7 +995,6 @@ if RunService:IsEdit() then
 	
 	if not checkInstallation() then
 		waitForInstallAccept()
-		installFiles()
 	end
 	loadFiles()
 	
