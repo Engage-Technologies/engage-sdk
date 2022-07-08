@@ -3,7 +3,7 @@ The Teach SDK and [Roblox Plugin](https://www.roblox.com/library/9415678965/Teac
 
 The Teach SDK provides personalized and adaptive questions to players at runtime.
 
-For more information about our mission to bring high quality education to Roblox's metaverse, visit [robloxteach.com](robloxteach.com).
+For more information about our mission to bring high quality education to Roblox's metaverse, visit [robloxeduverse.com](robloxeduverse.com).
 
 ## Demo
 Below is a demonstration video of the plugin being used to add questions to an obby.
