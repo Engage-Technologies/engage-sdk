@@ -30,4 +30,4 @@ In order to use the plugin, an API key must be entered in the plugin first that 
 
 ## Contact
 * For feature suggestions, please create an issue on the github.
-* Otherwise, please email luke@robloxteach.com
+* Otherwise, please email luke@engagetech.us
